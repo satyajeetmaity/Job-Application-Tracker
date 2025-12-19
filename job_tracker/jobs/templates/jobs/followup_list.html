@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load humanize %}
+<head>
+    <meta charset="UTF-8">
+    <title>Follow-ups</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --border: #e5e7eb;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            box-shadow: 0 6px 12px rgba(15, 23, 42, 0.07);
+        }
+
+        /* header layout */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .title-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            margin: 0 0 6px 0;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* subtle top-right link (not a button) */
+        .link-back {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .link-back:hover {
+            text-decoration: underline;
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        table {
+            width: 100%;
+            margin-top: 16px;
+            border-collapse: collapse;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: #f9fafb;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f1f5ff;
+        }
+
+        /* Priority pills */
+        .priority-pill {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .priority-low { background:#f3f4f6; color:#4b5563; }
+        .priority-medium { background:#fef3c7; color:#b45309; }
+        .priority-high { background:#dcfce7; color:#15803d; }
+
+        /* Status pills */
+        .status-pill {
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .applied-pill { background:#e0f2fe; color:#1d4ed8; }
+        .interview-pill { background:#fffbeb; color:#b45309; }
+        .rejected-pill { background:#fee2e2; color:#b91c1c; }
+        .offered-pill { background:#dcfce7; color:#166534; }
+
+        .today {
+            font-weight: bold;
+            color: #15803d;
+        }
+
+        .overdue {
+            color: #b91c1c;
+            font-weight: bold;
+        }
+
+        /* responsive: stack rows as cards on small screens */
+        @media (max-width: 760px) {
+            thead { display: none; }
+            table, tbody, tr, td { display: block; width: 100%; }
+            tr { margin-bottom: 12px; border-radius: 10px; background: var(--card-bg); padding: 12px; box-shadow: 0 4px 10px rgba(15,23,42,0.04); }
+            td { padding: 8px 6px; border-bottom: none; }
+            td::before { content: attr(data-label); display:block; color:var(--text-muted); font-size:12px; margin-bottom:6px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="card">
+
+        <div class="header-row">
+            <div class="title-block">
+                <h1>Follow-ups</h1>
+                <p class="subtitle">Showing follow-ups for <strong>{{ today }}</strong> (Today + Overdue)</p>
+            </div>
+
+            <!-- moved here: subtle text link, not a button -->
+            <div>
+                <a href="{% url 'job_list' %}" class="link-back" aria-label="Back to job list">← Back to Job List</a>
+            </div>
+        </div>
+
+        {% if jobs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Follow-up Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            {% for job in jobs %}
+                <tr>
+                    <td data-label="Title">{{ job.title }}</td>
+                    <td data-label="Company">{{ job.company }}</td>
+
+                    <!-- Status pill -->
+                    <td data-label="Status">
+                        {% if job.status == 'applied' %}
+                            <span class="status-pill applied-pill">Applied</span>
+                        {% elif job.status == 'interview' %}
+                            <span class="status-pill interview-pill">Interview</span>
+                        {% elif job.status == 'rejected' %}
+                            <span class="status-pill rejected-pill">Rejected</span>
+                        {% elif job.status == 'offered' %}
+                            <span class="status-pill offered-pill">Offered</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Priority pill -->
+                    <td data-label="Priority">
+                        <span class="priority-pill priority-{{ job.priority }}">
+                            {{ job.priority|capfirst }}
+                        </span>
+                    </td>
+
+                    <!-- Follow-up date -->
+                    <td data-label="Follow-up Date">
+                        {% if job.follow_up_date == today %}
+                            <span class="today">Today ({{ job.follow_up_date }})</span>
+                        {% elif job.follow_up_date < today %}
+                            <span class="overdue">Overdue ({{ job.follow_up_date }})</span>
+                        {% else %}
+                            {{ job.follow_up_date }}
+                        {% endif %}
+                    </td>
+
+                    <td data-label="Actions">
+                        <a href="{% url 'job_detail' job.pk %}" style="color:#2563eb;">View</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {% else %}
+        <p style="margin-top:20px; color:#6b7280;">No follow-ups for today or overdue.</p>
+        {% endif %}
+
+    </div>
+</div>
+</body>
+</html>

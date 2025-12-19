@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>{% if is_edit %}Edit Job{% else %}Add Job{% endif %} • Job Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --bg: #f3f4f6;
+            /* Light background like other page */
+            --bg-soft: #f9fafb;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent: #2563eb;
+            --accent-soft: rgba(37, 99, 235, 0.08);
+            --accent-hover: #1d4ed8;
+            --border-subtle: #e5e7eb;
+            --error: #b91c1c;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background-color: var(--bg);
+            color: var(--text-main);
+        }
+
+        .page-wrapper {
+            width: 100%;
+            max-width: 840px;
+            margin: 26px auto;
+            padding: 0 16px 32px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: radial-gradient(circle at top left, #38bdf8, #2563eb 40%, #1d4ed8 70%, #4f46e5);
+            color: #ffffff;
+            padding: 16px 20px 14px;
+            position: relative;
+        }
+
+        .card-header::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at top right, rgba(248, 250, 252, 0.35), transparent 55%);
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .card-header-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .card-header-main {
+            flex: 1;
+        }
+
+        .card-header h1 {
+            margin: 0 0 4px 0;
+            font-size: 20px;
+            letter-spacing: 0.01em;
+        }
+
+        .card-header p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            background-color: rgba(15, 23, 42, 0.28);
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.28);
+            white-space: nowrap;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background-color: #22c55e;
+        }
+
+        .card-body {
+            padding: 18px 20px 20px;
+            background: var(--card-bg);
+        }
+
+        form {
+            max-width: 100%;
+        }
+
+        .section {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+
+        .section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .section-title-pill {
+            width: 16px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2563eb, #4f46e5);
+        }
+
+        .section-hint {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .field-help {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 2px 0 0 0;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 7px 9px;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            background-color: #f9fafb;
+            transition:
+                border-color 120ms ease-out,
+                box-shadow 120ms ease-out,
+                background-color 120ms ease-out,
+                transform 60ms ease-out;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        input[type="url"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow:
+                0 0 0 1px rgba(37, 99, 235, 0.3),
+                0 8px 20px rgba(15, 23, 42, 0.08);
+            background-color: #ffffff;
+            outline: none;
+            transform: translateY(-0.5px);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .errorlist {
+            color: var(--error);
+            margin: 4px 0 0 0;
+            padding-left: 18px;
+            font-size: 12px;
+        }
+
+        .errorlist li {
+            margin: 0;
+        }
+
+        .non-field-errors {
+            margin-bottom: 12px;
+            padding: 9px 11px;
+            border-radius: 10px;
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            font-size: 13px;
+            color: var(--error);
+        }
+
+        .actions {
+            margin-top: 18px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .btn-primary {
+            padding: 8px 18px;
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            border-radius: 999px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            box-shadow:
+                0 10px 20px rgba(37, 99, 235, 0.35),
+                0 0 0 1px rgba(191, 219, 254, 0.8);
+            transition:
+                background-color 120ms ease-out,
+                transform 120ms ease-out,
+                box-shadow 120ms ease-out,
+                filter 80ms ease-out;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow:
+                0 14px 26px rgba(37, 99, 235, 0.45),
+                0 0 0 1px rgba(191, 219, 254, 0.95);
+            filter: saturate(1.08);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow:
+                0 6px 14px rgba(37, 99, 235, 0.4),
+                0 0 0 1px rgba(191, 219, 254, 1);
+        }
+
+        .back-link {
+            font-size: 13px;
+        }
+
+        .back-link a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 4px 6px;
+            border-radius: 999px;
+        }
+
+        .back-link a:hover {
+            color: var(--accent);
+            background-color: var(--accent-soft);
+            text-decoration: none;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 16px;
+        }
+
+        .grid-2 label {
+            margin-top: 0;
+        }
+
+        .inline-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            gap: 12px;
+        }
+
+        .salary-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 14px;
+            margin-top: 8px;
+        }
+
+        .pill-muted {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background-color: #f3f4f6;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        /* Remove number input spinners */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Icon + prefix containers */
+        .icon-field,
+        .money-field {
+            position: relative;
+            width: 100%;
+        }
+
+        .field-icon,
+        .money-prefix {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #6b7280;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .icon-field input[type="url"],
+        .icon-field input[type="text"],
+        .money-field input[type="number"],
+        .money-field input {
+            padding-left: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 16px 15px 18px;
+            }
+
+            .inline-row,
+            .salary-row {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .card-header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .badge {
+                margin-top: 6px;
+            }
+
+            .grid-2 {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-inner">
+                    <div class="card-header-main">
+                        <h1>{% if is_edit %}Edit Job{% else %}Add a New Job{% endif %}</h1>
+                        <p>
+                            {% if is_edit %}
+                            Update the details of this application and keep your progress organised.
+                            {% else %}
+                            Save a new job you’ve applied for or plan to apply, along with follow-up reminders.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-dot"></span>
+                        <span>{% if is_edit %}Editing existing{% else %}New application{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="non-field-errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Basic job info -->
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-title">
+                                <span class="section-title-pill"></span>
+                                Job details
+                            </div>
+                            <span class="section-hint">Role, company & priority</span>
+                        </div>
+
+                        <div class="inline-row">
+                            <div>
+                                <label for="{{ form.title.id_for_label }}">Title</label>
+                                {{ form.title }}
+                                {{ form.title.errors }}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.company.id_for_label }}">Company</label>
+                                {{ form.company }}
+                                {{ form.company.errors }}
+                            </div>
+                        </div>
+
+                        <div class="inline-row" style="margin-top: 8px;">
+                            <div>
+                                <label for="{{ form.status.id_for_label }}">Status</label>
+                                {{ form.status }}
+                                {{ form.status.errors }}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.priority.id_for_label }}">Priority</label>
+                                {{ form.priority }}
+                                {{ form.priority.errors }}
+                            </div>
+                        </div>
+
+                        {% if is_edit %}
+                        <div id="rejection-wrapper" style="margin-top: 10px;">
+                            <label for="{{ form.rejection_reason.id_for_label }}">Rejection reason (optional)</label>
+                            {{ form.rejection_reason }}
+                            {{ form.rejection_reason.errors }}
+                            <p class="field-help">
+                                Fill this only if the application was rejected and you know the reason.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Dates & next steps -->
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-title">
+                                <span class="section-title-pill"></span>
+                                Timeline
+                            </div>
+                            <span class="section-hint">When you applied & what’s next</span>
+                        </div>
+
+                        <div class="inline-row">
+                            <div>
+                                <label for="{{ form.apply_date.id_for_label }}">Apply date</label>
+                                {{ form.apply_date }}
+                                {{ form.apply_date.errors }}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.follow_up_date.id_for_label }}">Follow-up date (optional)</label>
+                                {{ form.follow_up_date }}
+                                {{ form.follow_up_date.errors }}
+                                <p class="field-help">Use this to remind yourself when to follow up.</p>
+                            </div>
+                        </div>
+
+                        <label for="{{ form.next_step.id_for_label }}" style="margin-top: 10px;">Next step
+                            (optional)</label>
+                        {{ form.next_step }}
+                        {{ form.next_step.errors }}
+                        <p class="field-help">
+                            Example: <span class="pill-muted">Prepare coding test</span>,
+                            <span class="pill-muted">HR call</span>,
+                            <span class="pill-muted">On-site interview</span>, etc.
+                        </p>
+                    </div>
+
+                    <!-- Contact & source -->
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-title">
+                                <span class="section-title-pill"></span>
+                                Contact & source
+                            </div>
+                            <span class="section-hint">Who & where you applied</span>
+                        </div>
+
+                        <div class="grid-2">
+                            <div>
+                                <label for="{{ form.contact_name.id_for_label }}">Contact name (optional)</label>
+                                {{ form.contact_name }}
+                                {{ form.contact_name.errors }}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.contact_email.id_for_label }}">Contact email (optional)</label>
+                                {{ form.contact_email }}
+                                {{ form.contact_email.errors }}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.contact_phone.id_for_label }}">Contact phone (optional)</label>
+                                {{ form.contact_phone }}
+                                {{ form.contact_phone.errors }}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.job_url.id_for_label }}">Job URL (optional)</label>
+                                <div class="icon-field">
+                                    <span class="field-icon">🔗</span>
+                                    {{ form.job_url }}
+                                </div>
+                                {{ form.job_url.errors }}
+                            </div>
+                        </div>
+
+                        <label for="{{ form.source.id_for_label }}" style="margin-top: 10px;">Source (optional)</label>
+                        {{ form.source }}
+                        {{ form.source.errors }}
+                        <p class="field-help">
+                            Example: <span class="pill-muted">LinkedIn</span>,
+                            <span class="pill-muted">Naukri</span>,
+                            <span class="pill-muted">Referral</span>,
+                            <span class="pill-muted">Company website</span>, etc.
+                        </p>
+
+                        <div class="salary-row">
+                            <div>
+                                <label for="{{ form.salary_min.id_for_label }}">Minimum salary (optional)</label>
+                                <div class="money-field">
+                                    <span class="money-prefix">₹</span>
+                                    {{ form.salary_min }}
+                                </div>
+                                {{ form.salary_min.errors }}
+                            </div>
+
+                            <div>
+                                <label for="{{ form.salary_max.id_for_label }}">Maximum salary (optional)</label>
+                                <div class="money-field">
+                                    <span class="money-prefix">₹</span>
+                                    {{ form.salary_max }}
+                                </div>
+                                {{ form.salary_max.errors }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-title">
+                                <span class="section-title-pill"></span>
+                                Notes
+                            </div>
+                            <span class="section-hint">Keep everything important in one place</span>
+                        </div>
+
+                        <label for="{{ form.notes.id_for_label }}">Notes</label>
+                        {{ form.notes }}
+                        {{ form.notes.errors }}
+                        <p class="field-help">
+                            Add anything important about this application, interview feedback, tech stack asked, salary
+                            discussion, or your own thoughts.
+                        </p>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn-primary" type="submit">
+                            {% if is_edit %}Update{% else %}Save job{% endif %}
+                        </button>
+
+                        <div class="back-link">
+                            {% if is_edit %}
+                            <a href="{% url 'job_detail' job.pk %}">Cancel and go back</a>
+                            {% else %}
+                            <a href="{% url 'job_list' %}">Back to all jobs</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if is_edit %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusSelect = document.getElementById('{{ form.status.id_for_label }}');
+            const rejectionWrapper = document.getElementById('rejection-wrapper');
+
+            function toggleRejectionReason() {
+                if (statusSelect && rejectionWrapper) {
+                    if (statusSelect.value === 'rejected') {
+                        rejectionWrapper.style.display = 'block';
+                    } else {
+                        rejectionWrapper.style.display = 'none';
+                    }
+                }
+            }
+
+            toggleRejectionReason();
+
+            if (statusSelect) {
+                statusSelect.addEventListener('change', toggleRejectionReason);
+            }
+        });
+    </script>
+    {% endif %}
+
+</body>
+
+</html>

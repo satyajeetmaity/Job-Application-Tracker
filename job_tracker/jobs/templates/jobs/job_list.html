@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load humanize %}
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Applications</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --border: #e5e7eb;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 16px;
+            background-color: var(--bg);
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #eff6ff, #faf5ff);
+            border: 1px solid #dbeafe;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+            margin-bottom: 16px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 4px 0;
+            font-size: 24px;
+            letter-spacing: 0.02em;
+        }
+
+        .subtitle {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 14px;
+            background-color: var(--primary);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 9999px;
+            font-size: 13px;
+            border: 1px solid transparent;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+            white-space: nowrap;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 13px;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            background-color: #fff;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+        }
+
+        .search-card {
+            margin-top: 16px;
+            margin-bottom: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
+        }
+
+        .search-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .search-filters form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-filters input[type="text"] {
+            padding: 6px 10px;
+            min-width: 230px;
+            border-radius: 9999px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            outline: none;
+            background-color: #f9fafb;
+        }
+
+        .search-filters input[type="text"]:focus {
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+        }
+
+        .search-filters button {
+            padding: 6px 14px;
+            border-radius: 9999px;
+            border: none;
+            background-color: var(--primary);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .search-filters button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .filters {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-right: 4px;
+            color: #374151;
+        }
+
+        .chip {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: #374151;
+            font-size: 12px;
+            display: inline-block;
+            background-color: #f9fafb;
+            transition: all 0.12s ease-out;
+        }
+
+        .chip:hover {
+            background-color: #e5e7eb;
+        }
+
+        .chip-active {
+            background-color: var(--primary);
+            color: #fff !important;
+            border-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .date-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 6px;
+        }
+
+        .summary-bar {
+            margin-top: 4px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #4b5563;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .summary-pill {
+            padding: 3px 8px;
+            border-radius: 9999px;
+            background-color: #eef2ff;
+            border: 1px solid #e0e7ff;
+        }
+
+        .summary-bar span strong {
+            font-weight: 600;
+        }
+
+        .summary-sort {
+            margin-left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .summary-sort a {
+            text-decoration: none;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            border: 1px solid transparent;
+            color: #374151;
+        }
+
+        .summary-sort a.chip-active {
+            border-color: var(--primary);
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        .export-link {
+            margin-left: auto;
+        }
+
+        .export-link a {
+            text-decoration: none;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            border: 1px dashed #9ca3af;
+            color: #374151;
+            background-color: #f9fafb;
+        }
+
+        .export-link a:hover {
+            background-color: #e5e7eb;
+        }
+
+        .table-card {
+            margin-top: 8px;
+            border-radius: 12px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            box-shadow: 0 6px 12px rgba(15, 23, 42, 0.04);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #f9fafb;
+        }
+
+        th,
+        td {
+            padding: 9px 10px;
+            text-align: left;
+            font-size: 13px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        th {
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        tbody tr:hover {
+            background-color: #eff6ff;
+        }
+
+        .status-applied,
+        .status-interview,
+        .status-rejected,
+        .status-offered {
+            font-weight: 600;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            display: inline-block;
+        }
+
+        .status-applied {
+            color: #1d4ed8;
+            background-color: #e0f2fe;
+        }
+
+        .status-interview {
+            color: #b45309;
+            background-color: #fffbeb;
+        }
+
+        .status-rejected {
+            color: #b91c1c;
+            background-color: #fee2e2;
+        }
+
+        .status-offered {
+            color: #166534;
+            background-color: #dcfce7;
+        }
+
+        /* Priority chips */
+        .priority-pill {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .priority-low {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .priority-medium {
+            background-color: #fef3c7;
+            color: #b45309;
+        }
+
+        .priority-high {
+            background-color: #dcfce7;
+            color: #15803d;
+        }
+
+        td a {
+            text-decoration: none;
+            font-size: 12px;
+            color: #2563eb;
+        }
+
+        td a:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            margin-top: 18px;
+            padding: 24px;
+            text-align: center;
+            border-radius: 12px;
+            background-color: #f9fafb;
+            border: 1px dashed #d1d5db;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        /* Responsive: table -> cards on small screens */
+        @media (max-width: 640px) {
+
+            .table-card {
+                border-radius: 10px;
+                overflow: hidden;
+            }
+
+            table,
+            thead,
+            tbody,
+            th,
+            tr {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody tr {
+                border-bottom: 1px solid #e5e7eb;
+                padding: 10px 10px 12px;
+                margin: 0;
+            }
+
+            tbody tr:nth-child(even) {
+                background-color: transparent;
+            }
+
+            tbody tr:hover {
+                background-color: #f9fafb;
+            }
+
+            td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: none;
+                padding: 4px 0;
+                font-size: 12px;
+            }
+
+            td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #6b7280;
+                margin-right: 8px;
+            }
+
+            td:last-child {
+                padding-top: 8px;
+            }
+        }
+
+        /* ---------- Status pill (matches priority look) ---------- */
+        .status-pill {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 86px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .status-applied-pill {
+            background-color: #e0f2fe;
+            color: #1d4ed8;
+            border: 1px solid rgba(37, 78, 216, 0.08);
+        }
+
+        .status-interview-pill {
+            background-color: #fffbeb;
+            color: #b45309;
+            border: 1px solid rgba(180, 83, 9, 0.08);
+        }
+
+        .status-offered-pill {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid rgba(22, 101, 52, 0.06);
+        }
+
+        .status-rejected-pill {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid rgba(185, 28, 28, 0.06);
+        }
+
+        .status-wrapper {
+            display: inline-block;
+            position: relative;
+            vertical-align: middle;
+        }
+
+        /* invisible select overlay so clicking the pill opens dropdown */
+        .status-select-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            /* invisible but clickable */
+            cursor: pointer;
+            border-radius: 9999px;
+            z-index: 2;
+        }
+
+        /* ---------- Priority pill (same behavior as status) ---------- */
+        .priority-wrapper {
+            display: inline-block;
+            position: relative;
+            vertical-align: middle;
+            line-height: 1;
+        }
+
+        .priority-pill {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 86px;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .priority-high-pill {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid rgba(21, 128, 61, 0.08);
+        }
+
+        .priority-medium-pill {
+            background-color: #fef3c7;
+            color: #b45309;
+            border: 1px solid rgba(180, 83, 9, 0.08);
+        }
+
+        .priority-low-pill {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid rgba(75, 85, 99, 0.12);
+        }
+
+        /* invisible select overlay */
+        .priority-select-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            border-radius: 9999px;
+            z-index: 2;
+        }
+
+        /* ---------- Follow-up action pills ---------- */
+        .followup-actions {
+            display: none;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .followup-btn {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            border: 1px solid transparent;
+            background-color: #f9fafb;
+            color: #374151;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .followup-btn:hover {
+            background-color: #e5e7eb;
+        }
+
+        .followup-move {
+            border-color: #c7d2fe;
+            background-color: #eef2ff;
+            color: #3730a3;
+        }
+
+        .followup-move:hover {
+            background-color: #e0e7ff;
+        }
+
+        .followup-done {
+            border-color: #bbf7d0;
+            background-color: #ecfdf5;
+            color: #166534;
+        }
+
+        .followup-done:hover {
+            background-color: #dcfce7;
+        }
+
+        /* ---------- Follow-up inline editor beautification ---------- */
+        .followup-editor {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 8px;
+            margin-top: 4px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 220px;
+        }
+
+        .followup-edit-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .followup-edit-row input[type="date"] {
+            flex: 1;
+            padding: 4px 6px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+        }
+
+        .followup-btn-save {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+
+        .followup-btn-cancel {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+
+        .followup-btn-save:hover {
+            background: #1d4ed8;
+        }
+
+        .followup-btn-cancel:hover {
+            background: #d1d5db;
+        }
+
+
+        @media (max-width: 420px) {
+            .status-select-overlay {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1>Job Application Tracker</h1>
+                <p class="subtitle">Track all your applications, interviews and offers in one place.</p>
+            </div>
+            <div class="header-actions">
+                <a class="btn-secondary" href="{% url 'home' %}">Home</a>
+                <a class="btn-primary" href="{% url 'job_create' %}">+ Add New Job</a>
+                <a class="btn-secondary" href="{% url 'stats' %}">View Stats</a>
+                <a class="btn-secondary" href="{% url 'followup_list' %}">Follow-ups</a>
+                <a class="btn-secondary" href="{% url 'upcoming_followups' %}">Upcoming this week</a>
+            </div>
+        </div>
+
+        <div class="search-card">
+            <div class="search-filters">
+                <!-- Search form: preserve status and date when present -->
+                <form method="get" action="{% url 'job_list' %}">
+                    <input type="text" name="q" placeholder="Search by title or company"
+                        value="{{ current_q|default:'' }}">
+                    {% if current_status %}
+                    <input type="hidden" name="status" value="{{ current_status }}">
+                    {% endif %}
+                    {% if current_date_range %}
+                    <input type="hidden" name="date" value="{{ current_date_range }}">
+                    {% endif %}
+                    {% if current_follow %}
+                    <input type="hidden" name="follow" value="{{ current_follow }}">
+                    {% endif %}
+                    <button type="submit">Search</button>
+                </form>
+
+                <!-- Combined status, date, follow-up filters -->
+                <div class="filters">
+                    <span class="filter-label">Status:</span>
+                    <a href="{% url 'job_list' %}?{% if current_q %}q={{ current_q }}{% endif %}{% if current_date_range %}&date={{ current_date_range }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}"
+                        class="chip {% if not current_status %}chip-active{% endif %}">All</a>
+
+                    <a href="{% url 'job_list' %}?status=applied{% if current_q %}&q={{ current_q }}{% endif %}{% if current_date_range %}&date={{ current_date_range }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}"
+                        class="chip {% if current_status == 'applied' %}chip-active{% endif %}">Applied</a>
+
+                    <a href="{% url 'job_list' %}?status=interview{% if current_q %}&q={{ current_q }}{% endif %}{% if current_date_range %}&date={{ current_date_range }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}"
+                        class="chip {% if current_status == 'interview' %}chip-active{% endif %}">Interview</a>
+
+                    <a href="{% url 'job_list' %}?status=rejected{% if current_q %}&q={{ current_q }}{% endif %}{% if current_date_range %}&date={{ current_date_range }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}"
+                        class="chip {% if current_status == 'rejected' %}chip-active{% endif %}">Rejected</a>
+
+                    <a href="{% url 'job_list' %}?status=offered{% if current_q %}&q={{ current_q }}{% endif %}{% if current_date_range %}&date={{ current_date_range }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}"
+                        class="chip {% if current_status == 'offered' %}chip-active{% endif %}">Offered</a>
+
+                    <div class="date-group" aria-label="Date filters">
+                        <span class="filter-label">Date:</span>
+                        <a href="{% url 'job_list' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if current_q %}q={{ current_q }}&{% endif %}{% if current_follow %}follow={{ current_follow }}{% endif %}"
+                            class="chip {% if not current_date_range %}chip-active{% endif %}">All time</a>
+
+                        <a href="{% url 'job_list' %}?date=today{% if current_status %}&status={{ current_status }}{% endif %}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}"
+                            class="chip {% if current_date_range == 'today' %}chip-active{% endif %}">Today</a>
+
+                        <a href="{% url 'job_list' %}?date=week{% if current_status %}&status={{ current_status }}{% endif %}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}"
+                            class="chip {% if current_date_range == 'week' %}chip-active{% endif %}">This week</a>
+                    </div>
+
+                    <div class="date-group" aria-label="Follow-up filters">
+                        <span class="filter-label">Follow-up:</span>
+                        <a href="{% url 'job_list' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if current_q %}q={{ current_q }}&{% endif %}{% if current_date_range %}date={{ current_date_range }}{% endif %}"
+                            class="chip {% if not current_follow %}chip-active{% endif %}">
+                            All
+                        </a>
+                        <a href="{% url 'job_list' %}?follow=today{% if current_status %}&status={{ current_status }}{% endif %}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_date_range %}&date={{ current_date_range }}{% endif %}"
+                            class="chip {% if current_follow == 'today' %}chip-active{% endif %}">
+                            Today
+                        </a>
+                        <a href="{% url 'job_list' %}?follow=overdue{% if current_status %}&status={{ current_status }}{% endif %}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_date_range %}&date={{ current_date_range }}{% endif %}"
+                            class="chip {% if current_follow == 'overdue' %}chip-active{% endif %}">
+                            Overdue
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-bar">
+            <span class="summary-pill">Total: <strong>{{ total_all }}</strong></span>
+            <span class="summary-pill">Applied: <strong>{{ total_applied }}</strong></span>
+            <span class="summary-pill">Interview: <strong>{{ total_interview }}</strong></span>
+            <span class="summary-pill">Rejected: <strong>{{ total_rejected }}</strong></span>
+            <span class="summary-pill">Offered: <strong>{{ total_offered }}</strong></span>
+
+            <div class="summary-sort">
+                <span class="filter-label">Sort by:</span>
+                <a href="{% url 'job_list' %}?page={{ page_obj.number }}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_q %}q={{ current_q }}&{% endif %}{% if current_date_range %}date={{ current_date_range }}&{% endif %}{% if current_follow %}follow={{ current_follow }}&{% endif %}&sort=date"
+                    class="{% if current_sort == 'date' %}chip-active{% endif %}">Date ↑</a>
+
+                <a href="{% url 'job_list' %}?page={{ page_obj.number }}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_q %}q={{ current_q }}&{% endif %}{% if current_date_range %}date={{ current_date_range }}&{% endif %}{% if current_follow %}follow={{ current_follow }}&{% endif %}&sort=date_desc"
+                    class="{% if current_sort == 'date_desc' %}chip-active{% endif %}">Date ↓</a>
+
+                <a href="{% url 'job_list' %}?page={{ page_obj.number }}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_q %}q={{ current_q }}&{% endif %}{% if current_date_range %}date={{ current_date_range }}&{% endif %}{% if current_follow %}follow={{ current_follow }}&{% endif %}&sort=priority"
+                    class="{% if current_sort == 'priority' %}chip-active{% endif %}">Priority</a>
+            </div>
+
+            <div class="export-link">
+                <a
+                    href="{% url 'export_jobs_csv' %}?{% if current_status %}status={{ current_status }}&{% endif %}{% if current_q %}q={{ current_q }}{% endif %}{% if current_date_range %}date={{ current_date_range }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                    Export CSV
+                </a>
+
+            </div>
+        </div>
+
+        {% if jobs %}
+        <div class="table-card">
+            <table>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td data-label="#"> {{ page_obj.start_index|add:forloop.counter0 }} </td>
+                        <td data-label="Title">{{ job.title }}</td>
+                        <td data-label="Company">{{ job.company }}</td>
+
+                        <!-- ---------- Status cell: pill visual + invisible select overlay ---------- -->
+                        <td data-label="Status">
+                            {% with st=job.status|default:''|lower %}
+                            <div class="status-wrapper" style="line-height:1;">
+                                <span
+                                    class="status-pill
+                                  {% if st == 'applied' %}status-applied-pill{% elif st == 'interview' %}status-interview-pill{% elif st == 'offered' %}status-offered-pill{% elif st == 'rejected' %}status-rejected-pill{% endif %}">
+                                    {{ job.status|capfirst }}
+                                </span>
+
+                                <form method="post" action="{% url 'job_quick_status' job.pk %}"
+                                    style="display:inline-block; margin:0;">
+                                    {% csrf_token %}
+                                    <select name="status" class="status-select-overlay" onchange="this.form.submit()"
+                                        aria-label="Change status for {{ job.title }}">
+                                        <option value="applied" {% if st == 'applied' %}selected{% endif %}>
+                                            Applied
+                                        </option>
+                                        <option value="interview" {% if st == 'interview' %}selected{% endif %}>
+                                            Interview
+                                        </option>
+                                        <option value="offered" {% if st == 'offered' %}selected{% endif %}>
+                                            Offered
+                                        </option>
+                                        <option value="rejected" {% if st == 'rejected' %}selected{% endif %}>
+                                            Rejected
+                                        </option>
+                                    </select>
+                                </form>
+                            </div>
+                            {% endwith %}
+                        </td>
+                        <!-- ---------- Priority cell: pill visual + invisible select overlay ---------- -->
+                        <td data-label="Priority">
+                            {% with pr=job.priority|default:''|lower %}
+                            <div class="priority-wrapper">
+
+                                <span
+                                    class="priority-pill {% if pr == 'high' %}priority-high-pill{% elif pr == 'medium' %}priority-medium-pill{% elif pr == 'low' %}priority-low-pill{% endif %}">
+                                    {{ job.priority|capfirst }}
+                                </span>
+
+                                <form method="post" action="{% url 'job_quick_priority' job.pk %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <select name="priority" class="priority-select-overlay"
+                                        onchange="this.form.submit()" aria-label="Change priority for {{ job.title }}">
+                                        <option value="high" {% if pr == 'high' %}selected{% endif %}>
+                                            High
+                                        </option>
+                                        <option value="medium" {% if pr == 'medium' %}selected{% endif %}>
+                                            Medium
+                                        </option>
+                                        <option value="low" {% if pr == 'low' %}selected{% endif %}>
+                                            Low
+                                        </option>
+                                    </select>
+                                </form>
+                            </div>
+                            {% endwith %}
+                        </td>
+
+                        <td data-label="Apply date">{{ job.apply_date|naturalday }}</td>
+                        <td data-label="Follow-up">
+
+                            {% if job.followup_state != "done" %}
+
+                            <div class="followup-inline" data-id="{{ job.pk }}">
+
+                                <!-- LABEL -->
+                                <span class="followup-text" onclick="toggleActions(this)">
+                                    {% if job.followup_state == "overdue" %}
+                                    <span style="color:#b91c1c;font-weight:600;">
+                                        Overdue ({{ job.follow_up_date }})
+                                    </span>
+                                    {% elif job.followup_state == "today" %}
+                                    <strong>Today ({{ job.follow_up_date }})</strong>
+                                    {% elif job.followup_state == "future" %}
+                                    {{ job.follow_up_date }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </span>
+
+                                <!-- MOVE + DONE (DEFAULT VIEW) -->
+                                <div class="followup-actions">
+                                    <button class="followup-btn followup-move" onclick="openFollowup(this)">
+                                        Move
+                                    </button>
+                                    <button class="followup-btn followup-done" onclick="markDone(this)">
+                                        Done
+                                    </button>
+                                </div>
+
+                                <!-- EDITOR (HIDDEN INITIALLY) -->
+                                <div class="followup-editor">
+                                    <div class="followup-edit-row">
+                                        <input type="date" value="{{ job.follow_up_date|date:'Y-m-d' }}">
+                                        <button class="followup-btn-save" onclick="saveFollowup(this)">Save</button>
+                                        <button class="followup-btn-cancel"
+                                            onclick="cancelFollowup(this)">Cancel</button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            {% else %}
+                            <span style="color:#166534;font-weight:600;">Done</span>
+                            {% endif %}
+
+                        </td>
+
+                        <td data-label="Actions">
+                            <a href="{% url 'job_detail' job.pk %}">View</a> |
+                            <a href="{% url 'job_update' job.pk %}">Edit</a> |
+                            <a href="{% url 'job_delete' job.pk %}">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div style="margin-top: 12px; display: flex; justify-content: center; gap:12px; font-size: 13px;">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_date_range %}&date={{ current_date_range }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}"
+                style="text-decoration: none; color: #2563eb;">Previous</a>
+            {% endif %}
+            <span> Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_date_range %}&date={{ current_date_range }}{% endif %}{% if current_follow %}&follow={{ current_follow }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}"
+                style="text-decoration:none; color:#2563eb;">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            No jobs found for this filter. Try changing the status, date or search term.
+        </div>
+        {% endif %}
+    </div>
+    <script>
+        function toggleActions(el) {
+            const w = el.closest('.followup-inline');
+            const actions = w.querySelector('.followup-actions');
+
+            if (actions.style.display === 'flex') {
+                actions.style.display = 'none';
+            } else {
+                actions.style.display = 'flex';
+            }
+        }
+        function openFollowup(btn) {
+            const w = btn.closest('.followup-inline');
+            w.querySelector('.followup-actions').style.display = 'none';
+            w.querySelector('.followup-editor').style.display = 'flex';
+        }
+
+        function cancelFollowup(btn) {
+            const w = btn.closest('.followup-inline');
+            w.querySelector('.followup-editor').style.display = 'none';
+            w.querySelector('.followup-actions').style.display = 'flex';
+        }
+
+        function saveFollowup(btn) {
+            const w = btn.closest('.followup-inline');
+            const jobId = w.dataset.id;
+            const date = w.querySelector('input[type="date"]').value;
+
+            fetch(`/jobs/${jobId}/followup/quick/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `follow_up_date=${date}`
+            }).then(() => location.reload());
+        }
+
+        function markDone(btn) {
+            const w = btn.closest('.followup-inline');
+            const jobId = w.dataset.id;
+
+            fetch(`/jobs/${jobId}/followup/done/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            }).then(() => location.reload());
+        }
+
+        function getCookie(name) {
+            let v = null;
+            document.cookie.split(';').forEach(c => {
+                c = c.trim();
+                if (c.startsWith(name + '=')) {
+                    v = decodeURIComponent(c.slice(name.length + 1));
+                }
+            });
+            return v;
+        }
+    </script>
+
+
+</body>
+
+</html>

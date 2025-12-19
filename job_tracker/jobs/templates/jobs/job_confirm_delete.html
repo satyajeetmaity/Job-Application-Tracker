@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Job</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f3f4f6;
+        }
+
+        .page-wrapper {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: #b91c1c;
+            color: #ffffff;
+            padding: 14px 18px;
+        }
+
+        .card-header h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .card-body {
+            padding: 18px;
+        }
+
+        .warning-text {
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #111827;
+        }
+
+        .job-summary {
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .job-summary strong {
+            display: block;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-danger,
+        .btn-secondary {
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .btn-danger {
+            background-color: #dc2626;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="card">
+            <div class="card-header">
+                <h1>Delete Job</h1>
+            </div>
+            <div class="card-body">
+                <p class="warning-text">
+                    Are you sure you want to permanently delete this job?
+                </p>
+
+                <div class="job-summary">
+                    <strong>{{ job.title }}</strong>
+                    <span>{{ job.company }}</span><br>
+                    <span>Status: {{ job.status }} | Apply date: {{ job.apply_date }}</span>
+                </div>
+
+                <form method="post" class="actions">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-danger">Yes, delete</button>
+                    <a href="{% url 'job_detail' job.pk %}" class="btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

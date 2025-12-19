@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load humanize %}
+<head>
+    <meta charset="UTF-8">
+    <title>Job Stats</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        :root{
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --muted: #6b7280;
+            --text: #0f172a;
+            --accent: #2563eb;
+            --glass: rgba(15,23,42,0.04);
+            --success: #16a34a;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --soft: #eef2ff;
+            --radius: 12px;
+            --shadow: 0 8px 24px rgba(15,23,42,0.06);
+        }
+
+        html,body{height:100%;}
+        body{
+            margin:0;
+            background:var(--bg);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            color:var(--text);
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            padding:20px;
+        }
+
+        .wrap { max-width: 1100px; margin: 0 auto; }
+
+        .header {
+            display:flex;
+            gap:16px;
+            align-items:center;
+            justify-content:space-between;
+            margin-bottom:18px;
+        }
+
+        .title-block {
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+        }
+
+        h1 { margin:0; font-size:20px; letter-spacing: -0.2px; }
+        .subtitle { color:var(--muted); font-size:13px; margin:0; }
+
+        .controls { display:flex; gap:8px; align-items:center; }
+        .btn {
+            display:inline-flex; align-items:center; gap:8px;
+            padding:8px 12px; border-radius:999px;
+            background:var(--card); border:1px solid #e6edf8; text-decoration:none;
+            color:var(--accent); font-size:13px; box-shadow: 0 2px 6px rgba(15,23,42,0.03);
+        }
+        .btn:hover{ transform:translateY(-1px); }
+
+        .card {
+            background:var(--card);
+            border-radius:var(--radius);
+            padding:18px;
+            box-shadow:var(--shadow);
+            border:1px solid rgba(14, 38, 84, 0.04);
+        }
+
+        .stats-grid {
+            display:grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+            gap:12px;
+            margin-top:12px;
+        }
+
+        .stat {
+            background:#fbfdff;
+            border-radius:10px;
+            padding:12px;
+            border:1px solid rgba(15,23,42,0.03);
+            display:flex;
+            gap:10px;
+            align-items:center;
+        }
+
+        .stat .icon {
+            width:44px; height:44px; border-radius:10px;
+            display:flex; align-items:center; justify-content:center;
+            background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(0,0,0,0.02));
+            box-shadow: 0 2px 6px rgba(15,23,42,0.03);
+            flex-shrink:0;
+        }
+        .stat .icon svg { width:20px; height:20px; display:block; }
+
+        .stat .meta { flex:1; min-width:0; }
+        .stat .label { color:var(--muted); font-size:12px; margin-bottom:4px; }
+        .stat .value { font-weight:700; font-size:18px; line-height:1; color:var(--text); }
+
+        /* colored icons */
+        .icon.total { background: linear-gradient(90deg,#eef2ff,#fff); color:var(--accent); }
+        .icon.applied { background: linear-gradient(90deg,#f0f9ff,#fff); color:#0ea5e9; }
+        .icon.interview { background: linear-gradient(90deg,#fff7ed,#fff); color:#c2410c; }
+        .icon.rejected { background: linear-gradient(90deg,#fff1f2,#fff); color:#ef4444; }
+        .icon.offered { background: linear-gradient(90deg,#ecfdf5,#fff); color:#15803d; }
+        .icon.follow { background: linear-gradient(90deg,#f8fafc,#fff); color:#6b7280; }
+
+        /* conversion area */
+        .conversion {
+            margin-top:18px;
+            display:grid;
+            gap:12px;
+        }
+
+        .conv-row {
+            display:flex;
+            align-items:center;
+            gap:12px;
+            background: #fbfdff;
+            border-radius:10px;
+            padding:10px;
+            border:1px solid rgba(15,23,42,0.03);
+        }
+        .conv-left { flex:1; min-width:0; }
+        .conv-title { font-size:13px; color:var(--muted); margin:0 0 6px 0; }
+        .conv-value { font-weight:700; font-size:15px; margin:0; color:var(--text); }
+
+        .progress {
+            width:100%; height:10px; background:#eef2ff; border-radius:999px; overflow:hidden;
+            box-shadow:inset 0 -1px 0 rgba(0,0,0,0.03);
+        }
+        .progress > i {
+            display:block; height:100%; width:0%;
+            background: linear-gradient(90deg,var(--accent), #60a5fa);
+            border-radius:999px; transition: width 700ms cubic-bezier(.2,.9,.2,1);
+        }
+
+        .meta-small { font-size:12px; color:var(--muted); margin-left:8px; }
+
+        /* responsive tweaks */
+        @media (max-width:720px){
+            .header { flex-direction:column; align-items:flex-start; gap:8px; }
+            .controls { margin-top:6px; }
+        }
+
+        /* small subtle hover */
+        .stat:hover { transform: translateY(-4px); transition: transform 160ms ease; }
+
+        /* tiny footer */
+        .footer {
+            margin-top:14px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+            color:var(--muted);
+            font-size:13px;
+        }
+
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <div class="header">
+        <div class="title-block">
+            <h1>Job Statistics</h1>
+            <p class="subtitle">Overview as of <strong>{{ today }}</strong> · quick snapshot of your pipeline</p>
+        </div>
+
+        <div class="controls">
+            <a href="{% url 'job_list' %}" class="btn" title="Back to list">← Back to job list</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="stats-grid">
+            <div class="stat">
+                <div class="icon total" aria-hidden="true">
+                    <!-- total icon -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12h18"></path>
+                        <path d="M6 6h12"></path>
+                        <path d="M6 18h12"></path>
+                    </svg>
+                </div>
+                <div class="meta">
+                    <div class="label">Total jobs</div>
+                    <div class="value">{{ total_all }}</div>
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="icon applied" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M12 2v20M5 9h14" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="meta">
+                    <div class="label">Applied</div>
+                    <div class="value">{{ total_applied }}</div>
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="icon interview" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M21 15v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="meta">
+                    <div class="label">Interview</div>
+                    <div class="value">{{ total_interview }}</div>
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="icon rejected" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                </div>
+                <div class="meta">
+                    <div class="label">Rejected</div>
+                    <div class="value">{{ total_rejected }}</div>
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="icon offered" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M12 2l3 7h7l-5.5 4 2 7L12 17l-6.5 3 2-7L2 9h7z"></path>
+                    </svg>
+                </div>
+                <div class="meta">
+                    <div class="label">Offered</div>
+                    <div class="value">{{ total_offered }}</div>
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="icon follow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M21 10h-6"></path>
+                        <path d="M3 6h18M3 18h18"></path>
+                    </svg>
+                </div>
+                <div class="meta">
+                    <div class="label">Follow-ups today</div>
+                    <div class="value">{{ follow_today }}</div>
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="icon follow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M12 5v14M5 12h14"></path>
+                    </svg>
+                </div>
+                <div class="meta">
+                    <div class="label">Overdue follow-ups</div>
+                    <div class="value">{{ follow_overdue }}</div>
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="icon applied" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M4 6h16M4 10h16M4 14h8"></path>
+                    </svg>
+                </div>
+                <div class="meta">
+                    <div class="label">Applied this week</div>
+                    <div class="value">{{ applied_this_week }}</div>
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="icon total" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
+                    </svg>
+                </div>
+                <div class="meta">
+                    <div class="label">In-progress (not decided)</div>
+                    <div class="value">{{ in_progress }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversion / progress section -->
+        <div class="conversion">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+                <h2 style="margin:0; font-size:16px;">Conversion rates</h2>
+                <div style="font-size:13px; color:var(--muted);">Updated {{ today }}</div>
+            </div>
+
+            <div class="conv-row" role="group" aria-label="Applied to Interview conversion">
+                <div class="conv-left">
+                    <p class="conv-title">Applied → Interview</p>
+                    <p class="conv-value">{{ applied_to_interview|default:0|floatformat:1 }}% <span class="meta-small">of applied became interviews</span></p>
+                    <div class="progress" aria-hidden="true">
+                        <i data-percent="{{ applied_to_interview|default:0 }}"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conv-row" role="group" aria-label="Interview to Offer conversion">
+                <div class="conv-left">
+                    <p class="conv-title">Interview → Offer</p>
+                    <p class="conv-value">{{ interview_to_offer|default:0|floatformat:1 }}% <span class="meta-small">of interviews produced offers</span></p>
+                    <div class="progress" aria-hidden="true">
+                        <i data-percent="{{ interview_to_offer|default:0 }}"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conv-row" role="group" aria-label="Average applications per day">
+                <div class="conv-left">
+                    <p class="conv-title">Avg applications per day</p>
+                    <p class="conv-value">{{ avg_applied_per_day|default:0|floatformat:2 }} <span class="meta-small">avg/day</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>Tip: Use the main Jobs list to manage follow-ups and update status quickly.</div>
+            <div><a href="{% url 'job_list' %}">Open Job List →</a></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // animate progress bars from data-percent attribute
+    document.addEventListener('DOMContentLoaded', function () {
+        const bars = document.querySelectorAll('.progress > i[data-percent]');
+        bars.forEach(function (el) {
+            // parse percent safely
+            let p = parseFloat(el.getAttribute('data-percent')) || 0;
+            if (p < 0) p = 0;
+            if (p > 100) p = 100;
+            // animate using width
+            // short delay to trigger CSS transition
+            setTimeout(() => {
+                el.style.width = p + '%';
+            }, 80);
+        });
+    });
+</script>
+</body>
+</html>

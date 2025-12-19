@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ job.title }} - {{ job.company }}</title>
+    <style>
+        :root {
+            --bg: #f3f4f6;
+            --bg-soft: #f9fafb;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent: #2563eb;
+            --accent-soft: rgba(37, 99, 235, 0.08);
+            --accent-hover: #1d4ed8;
+            --border-subtle: #e5e7eb;
+            --error: #b91c1c;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background-color: var(--bg);
+            color: var(--text-main);
+        }
+
+        .page-wrapper {
+            max-width: 840px;
+            margin: 30px auto;
+            padding: 0 16px 32px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: radial-gradient(circle at top left, #38bdf8, #2563eb 40%, #1d4ed8 70%, #4f46e5);
+            color: #ffffff;
+            padding: 16px 20px 14px;
+            position: relative;
+        }
+
+        .card-header::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at top right, rgba(248, 250, 252, 0.35), transparent 55%);
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .card-header-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .card-header-main {
+            flex: 1;
+        }
+
+        .card-header h1 {
+            margin: 0 0 4px 0;
+            font-size: 20px;
+            letter-spacing: 0.01em;
+        }
+
+        .card-header p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            background-color: rgba(15, 23, 42, 0.28);
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.28);
+            white-space: nowrap;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background-color: #22c55e;
+        }
+
+        .card-body {
+            padding: 18px 20px 20px;
+            background-color: var(--card-bg);
+        }
+
+        .section {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+
+        .section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .section-title-pill {
+            width: 16px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2563eb, #4f46e5);
+        }
+
+        .section-hint {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .field-row {
+            margin-bottom: 10px;
+        }
+
+        .field-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .field-label-icon {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .field-value {
+            margin-top: 2px;
+            font-size: 14px;
+            color: #111827;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 18px;
+        }
+
+        @media (max-width: 640px) {
+            .meta-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .card-header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .badge {
+                margin-top: 6px;
+            }
+        }
+
+        .notes-box {
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            padding: 8px 10px;
+            background-color: #f9fafb;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+        }
+
+        .status-applied {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .status-applied .status-pill-dot {
+            background-color: #2563eb;
+        }
+
+        .status-interview {
+            background-color: #fffbeb;
+            color: #b45309;
+        }
+
+        .status-interview .status-pill-dot {
+            background-color: #f59e0b;
+        }
+
+        .status-rejected {
+            background-color: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .status-rejected .status-pill-dot {
+            background-color: #ef4444;
+        }
+
+        .status-offered {
+            background-color: #ecfdf3;
+            color: #15803d;
+        }
+
+        .status-offered .status-pill-dot {
+            background-color: #22c55e;
+        }
+
+        .job-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #2563eb;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .job-link:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+        .job-link-icon {
+            font-size: 14px;
+        }
+
+        .salary-text {
+            font-weight: 500;
+        }
+
+        .salary-currency {
+            font-size: 13px;
+            color: #6b7280;
+            margin-right: 4px;
+        }
+
+        .pill-muted {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background-color: #f3f4f6;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .actions {
+            margin-top: 18px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary,
+        .btn-danger,
+        .btn-secondary {
+            padding: 7px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: #ffffff;
+            box-shadow:
+                0 10px 20px rgba(37, 99, 235, 0.35),
+                0 0 0 1px rgba(191, 219, 254, 0.8);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-danger {
+            background-color: #dc2626;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #111827;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .btn-icon {
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-inner">
+                    <div class="card-header-main">
+                        <h1>{{ job.title }}</h1>
+                        <p>{{ job.company }}</p>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-dot"></span>
+                        <span>Job details</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <!-- Top meta: status, priority, dates, salary -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-title-pill"></span>
+                            Overview
+                        </div>
+                        <span class="section-hint">Status, priority & timeline</span>
+                    </div>
+
+                    <div class="meta-grid">
+                        <div class="field-row">
+                            <div class="field-label">
+                                <span class="field-label-icon">📌</span> Status
+                            </div>
+                            <div class="field-value">
+                                <span class="status-pill status-{{ job.status }}">
+                                    <span class="status-pill-dot"></span>
+                                    {{ job.status|title }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="field-row">
+                            <div class="field-label">
+                                <span class="field-label-icon">⭐</span> Priority
+                            </div>
+                            <div class="field-value">{{ job.get_priority_display }}</div>
+                        </div>
+
+                        <div class="field-row">
+                            <div class="field-label">
+                                <span class="field-label-icon">📅</span> Apply date
+                            </div>
+                            <div class="field-value">{{ job.apply_date }}</div>
+                        </div>
+
+                        {% if job.follow_up_date %}
+                        <div class="field-row">
+                            <div class="field-label">
+                                <span class="field-label-icon">⏰</span> Follow-up date
+                            </div>
+                            <div class="field-value">{{ job.follow_up_date }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if job.salary_min or job.salary_max %}
+                        <div class="field-row">
+                            <div class="field-label">
+                                <span class="field-label-icon">💰</span> Salary range
+                            </div>
+                            <div class="field-value salary-text">
+                                <span class="salary-currency">₹</span>
+                                {% if job.salary_min and job.salary_max %}
+                                {{ job.salary_min }} – {{ job.salary_max }}
+                                {% else %}
+                                {{ job.salary_min|default:job.salary_max }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if job.next_step %}
+                        <div class="field-row">
+                            <div class="field-label">
+                                <span class="field-label-icon">➡️</span> Next step
+                            </div>
+                            <div class="field-value">
+                                <span class="pill-muted">{{ job.next_step }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Contact & source -->
+                {% if job.contact_name or job.contact_email or job.contact_phone or job.job_url or job.source %}
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-title-pill"></span>
+                            Contact & source
+                        </div>
+                        <span class="section-hint">Who you spoke to & where it came from</span>
+                    </div>
+
+                    {% if job.contact_name or job.contact_email or job.contact_phone %}
+                    <div class="field-row">
+                        <div class="field-label">
+                            <span class="field-label-icon">👤</span> Contact
+                        </div>
+                        <div class="field-value">
+                            {% if job.contact_name %}{{ job.contact_name }}{% endif %}
+                            {% if job.contact_email %}<br>{{ job.contact_email }}{% endif %}
+                            {% if job.contact_phone %}<br>{{ job.contact_phone }}{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if job.job_url or job.source %}
+                    <div class="field-row">
+                        <div class="field-label">
+                            <span class="field-label-icon">🔗</span> Job link & source
+                        </div>
+                        <div class="field-value">
+                            {% if job.job_url %}
+                            <a href="{{ job.job_url }}" target="_blank" class="job-link">
+                                <span class="job-link-icon">🌐</span>
+                                <span>{{ job.job_url }}</span>
+                            </a><br>
+                            {% endif %}
+                            {% if job.source %}
+                            Source: {{ job.get_source_display }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Notes -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-title-pill"></span>
+                            Notes
+                        </div>
+                        <span class="section-hint">Interview feedback, tech stack, your thoughts</span>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-label">
+                            <span class="field-label-icon">📝</span> Notes
+                        </div>
+                        <div class="field-value">
+                            <div class="notes-box">
+                                {{ job.notes|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rejection reason -->
+                {% if job.status == 'rejected' and job.rejection_reason %}
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-title-pill"></span>
+                            Rejection reason
+                        </div>
+                        <span class="section-hint">Helps you learn for next time</span>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-label">
+                            <span class="field-label-icon">⚠️</span> Reason
+                        </div>
+                        <div class="field-value">
+                            <div class="notes-box">
+                                {{ job.rejection_reason|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="actions">
+                    <a href="{% url 'job_update' job.pk %}" class="btn-primary">
+                        <span class="btn-icon">✏️</span> Edit
+                    </a>
+                    <a href="{% url 'job_delete' job.pk %}" class="btn-danger">
+                        <span class="btn-icon">🗑️</span> Delete
+                    </a>
+                    <a href="{% url 'job_list' %}" class="btn-secondary">
+                        <span class="btn-icon">←</span> Back to all jobs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
