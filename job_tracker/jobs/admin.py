@@ -1,7 +1,18 @@
+# jobs/admin.py
 from django.contrib import admin
 from .models import Job
-# Register your models here.
-# admin.site.register(Job)
+
 @admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
-    ordering = ('id',) #oldest first,newer after old
+    list_display = (
+        'sr_no',
+        'title',
+        'company',
+        'user',     
+    )
+    ordering = ('id',) 
+
+    def sr_no(self, obj):
+        return obj.id   # or custom serial logic
+    
+    sr_no.short_description = "No."

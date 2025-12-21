@@ -437,6 +437,9 @@
             <div class="auth-hello">
                 <div class="username">
                     Hi, {{ user.username }}
+                    {% if user.is_staff %}
+                    (Admin)
+                    {% endif %}
                 </div>
                 <div class="login-since">
                     Logged in since {{ user.last_login|date:"d M Y, h:i A" }}
@@ -449,6 +452,7 @@
             </form>
             {% else %}
             <a href="{% url 'login' %}" class="btn-link">Login</a>
+            <a href="{% url 'signup' %}" class="btn-link">Signup</a>
             {% endif %}
         </div>
     </header>

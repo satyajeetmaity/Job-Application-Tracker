@@ -1,3 +1,4 @@
+from urllib import request
 from django.core.paginator import Paginator
 import csv
 from django.http import HttpResponse
@@ -8,17 +9,39 @@ import datetime
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Job
-from .forms import JobForm
 from django.db.models import Q, Case, When, Value, IntegerField, CharField
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+from .forms import JobForm, CustomUserCreationForm
+from django.contrib.auth import login
 
 # Create your views here.
 def home(request):
-    total_all = Job.objects.count()
-    total_applied = Job.objects.filter(status='applied').count()
-    total_interview = Job.objects.filter(status='interview').count()
-    total_offered = Job.objects.filter(status='offered').count()
+    if request.user.is_authenticated:
+        jobs = Job.objects.filter(user=request.user)
+        total_all = jobs.count()
+        total_applied = jobs.filter(status='applied').count()
+        total_interview = jobs.filter(status='interview').count()
+        total_offered = jobs.filter(status='offered').count()
+    else:
+        total_all = 0
+        total_applied = 0
+        total_interview = 0
+        total_offered = 0
     return render(request, 'jobs/home.html',{'total_all':total_all,'total_applied':total_applied, 'total_interview':total_interview, 'total_offered':total_offered})
+
+def signup(request):
+    if request.user.is_authenticated:
+        return redirect('job_list')
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save() #saved in DB
+            login(request, user) #auto login after signup
+            return redirect('job_list')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'registration/signup.html', {'form': form})
 
 @login_required
 def job_list(request):
@@ -28,14 +51,14 @@ def job_list(request):
     sort = request.GET.get('sort')
     follow = request.GET.get('follow')
 
-    jobs = Job.objects.all().order_by('id') # same order as admin
+    jobs = Job.objects.filter(user=request.user)
 
     #stats before filtering for display
-    total_all = Job.objects.count()
-    total_applied = Job.objects.filter(status='applied').count()
-    total_interview = Job.objects.filter(status='interview').count()
-    total_rejected = Job.objects.filter(status='rejected').count()
-    total_offered = Job.objects.filter(status='offered').count()
+    total_all = jobs.count()
+    total_applied = jobs.filter(status='applied').count()
+    total_interview = jobs.filter(status='interview').count()
+    total_rejected = jobs.filter(status='rejected').count()
+    total_offered = jobs.filter(status='offered').count()
     
     if status in ['applied','interview','rejected','offered']:
         jobs = jobs.filter(status=status)
@@ -103,20 +126,20 @@ def job_list(request):
 @login_required
 def followup_list(request):
     today = timezone.localdate()
-    jobs = Job.objects.filter(follow_up_date__lte=today,follow_up_done=False).exclude(status__in=["rejected", "offered"])
+    jobs = Job.objects.filter(user=request.user,follow_up_date__lte=today,follow_up_done=False).exclude(status__in=["rejected", "offered"])
     return render(request, 'jobs/followup_list.html',{'jobs':jobs,'today':today,})
 
 @login_required
 def upcoming_followups(request):
     today = timezone.localdate()
     week_later = today + timedelta(days=6)
-    jobs = Job.objects.filter( follow_up_date__gte=today,follow_up_date__lte=week_later,follow_up_done=False).exclude(status__in=["rejected", "offered"]).order_by("follow_up_date")
+    jobs = Job.objects.filter(user=request.user,follow_up_date__gte=today,follow_up_date__lte=week_later,follow_up_done=False).exclude(status__in=["rejected", "offered"]).order_by("follow_up_date")
     context = {"jobs":jobs,"today":today,}
     return render(request, "jobs/upcoming_followups.html", context)
 
 @login_required
 def job_detail(request, pk):
-    job = get_object_or_404(Job, pk=pk)
+    job = get_object_or_404(Job, pk=pk, user=request.user)
     return render(request, 'jobs/job_detail.html',{'job':job})
 
 @login_required
@@ -124,7 +147,9 @@ def job_create(request):
     if request.method == 'POST':
         form = JobForm(request.POST)
         if form.is_valid():
-            job = form.save()
+            job = form.save(commit=False)
+            job.user = request.user
+            job.save()
             return redirect('job_detail', pk=job.pk)
     else:
         form = JobForm()
@@ -132,7 +157,7 @@ def job_create(request):
 
 @login_required
 def job_update(request,pk):
-    job = get_object_or_404(Job,pk=pk)
+    job = get_object_or_404(Job,pk=pk, user=request.user)
     if request.method == 'POST':
         form = JobForm(request.POST, instance=job)
         if form.is_valid():
@@ -147,7 +172,7 @@ def job_update(request,pk):
 
 @login_required   
 def job_delete(request, pk):
-    job = get_object_or_404(Job,pk=pk)
+    job = get_object_or_404(Job,pk=pk, user=request.user)
     if request.method == 'POST':
         job.delete()
         return redirect('job_list')
@@ -158,7 +183,11 @@ def export_jobs_csv(request):
     status = request.GET.get('status')
     q = request.GET.get('q')
     date_range = request.GET.get('date') #optional: 'today' or 'week'
-    jobs = Job.objects.all().order_by('id')
+    if request.user.is_staff:
+      jobs = Job.objects.all()
+    else:
+      jobs = Job.objects.filter(user=request.user)
+
 
     if status in ['applied','interview','rejected','offered']:
         jobs = jobs.filter(status=status)
@@ -198,27 +227,27 @@ def export_jobs_csv(request):
 @login_required
 def stats_view(request):
     today = timezone.localdate()
+    jobs = Job.objects.filter(user=request.user)
 
-    total_all = Job.objects.count()
-    total_applied = Job.objects.filter(status='applied').count()
-    total_interview = Job.objects.filter(status='interview').count()
-    total_rejected = Job.objects.filter(status='rejected').count()
-    total_offered = Job.objects.filter(status='offered').count()
+    total_all = jobs.count()
+    total_applied = jobs.filter(status='applied').count()
+    total_interview = jobs.filter(status='interview').count()
+    total_rejected = jobs.filter(status='rejected').count()
+    total_offered = jobs.filter(status='offered').count()
 
-    follow_today = Job.objects.filter(follow_up_date=today, follow_up_done=False).count()
-    follow_overdue = Job.objects.filter( follow_up_date__lt=today, follow_up_done=False).count()
-
+    follow_today = jobs.filter(follow_up_date=today, follow_up_done=False).count()
+    follow_overdue = jobs.filter( follow_up_date__lt=today, follow_up_done=False).count()
     #conversion rates(avoid division by 0)
     applied_to_interview = ((total_interview/total_applied)*100 if total_applied else 0)
     interview_to_offer = ((total_offered/total_interview)*100 if total_interview else 0)
     #in_progress(pipeline:not rejected, not offered)
-    in_progress = Job.objects.exclude(status__in=['rejected','offered']).count()
+    in_progress = jobs.exclude(status__in=['rejected','offered']).count()
     #this week range(Mon-Sun)
     start_week = today - timedelta(days=today.weekday())
     end_week = start_week + timedelta(days=6)
-    applied_this_week = Job.objects.filter(status='applied',apply_date__range=[start_week, end_week]).count()
+    applied_this_week = jobs.filter(status='applied',apply_date__range=[start_week, end_week]).count()
     #average applications per day since first apply
-    first_job = Job.objects.order_by('apply_date').first()
+    first_job = jobs.order_by('apply_date').first()
     if first_job and first_job.apply_date:
         days_span = (today - first_job.apply_date).days + 1
         avg_applied_per_day = total_applied / days_span if days_span > 0 else total_applied
@@ -245,7 +274,7 @@ def stats_view(request):
 @login_required
 @require_POST
 def job_quick_status(request, pk):
-    job = get_object_or_404(Job, pk=pk)
+    job = get_object_or_404(Job, pk=pk, user=request.user)
 
     new_status = request.POST.get("status")
     if new_status in ["applied", "interview", "rejected", "offered"]:
@@ -256,7 +285,7 @@ def job_quick_status(request, pk):
 @login_required
 @require_POST
 def job_quick_priority(request, pk):
-    job = get_object_or_404(Job, pk=pk)
+    job = get_object_or_404(Job, pk=pk, user=request.user)
 
     new_priority = request.POST.get("priority")
     if new_priority in ["high","medium","low"]:
@@ -267,7 +296,7 @@ def job_quick_priority(request, pk):
 @login_required
 @require_POST
 def job_followup_done(request,pk):
-    job = get_object_or_404(Job, pk=pk)
+    job = get_object_or_404(Job, pk=pk, user=request.user)
     job.follow_up_date = None
     job.follow_up_done = True  #Done ≠ Never set
     job.save()
@@ -276,7 +305,7 @@ def job_followup_done(request,pk):
 @login_required
 @require_POST
 def job_followup_quick_update(request, pk):
-    job = get_object_or_404(Job, pk=pk)
+    job = get_object_or_404(Job, pk=pk, user=request.user)
     date_str = request.POST.get("follow_up_date")
 
     if date_str:
