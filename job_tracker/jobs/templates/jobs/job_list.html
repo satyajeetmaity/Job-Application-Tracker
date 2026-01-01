@@ -641,6 +641,17 @@
             background: #d1d5db;
         }
 
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            font-size: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
 
         @media (max-width: 420px) {
             .status-select-overlay {
@@ -657,13 +668,20 @@
                 <h1>Job Application Tracker</h1>
                 <p class="subtitle">Track all your applications, interviews and offers in one place.</p>
             </div>
+
             <div class="header-actions">
-                <a class="btn-secondary" href="{% url 'home' %}">Home</a>
-                <a class="btn-primary" href="{% url 'job_create' %}">+ Add New Job</a>
-                <a class="btn-secondary" href="{% url 'stats' %}">View Stats</a>
-                <a class="btn-secondary" href="{% url 'followup_list' %}">Follow-ups</a>
-                <a class="btn-secondary" href="{% url 'upcoming_followups' %}">Upcoming this week</a>
+                {% if request.user.is_staff %}
+                <a class="btn-secondary icon-btn" href="{% url 'admin_dashboard' %}" title="Admin Dashboard">📊</a>
+                <a class="btn-secondary icon-btn" href="/admin/" title="Django Admin Panel">⚙️</a>
+                {% endif %}
+
+                <a class="btn-secondary" href="{% url 'home' %}" title="Home">🏠</a>
+                <a class="btn-primary" href="{% url 'job_create' %}" title="Add Job">➕</a>
+                <a class="btn-secondary" href="{% url 'stats' %}" title="Stats">📈</a>
+                <a class="btn-secondary" href="{% url 'followup_list' %}" title="Follow-ups">📅</a>
+                <a class="btn-secondary" href="{% url 'upcoming_followups' %}" title="Upcoming">⏳</a>
             </div>
+
         </div>
 
         <div class="search-card">

@@ -15,13 +15,25 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import path, include
-from jobs.views import signup, home, job_list, job_detail, job_create, job_update, job_delete, export_jobs_csv, followup_list, upcoming_followups, stats_view, job_quick_status, job_quick_priority, job_followup_done, job_followup_quick_update
+from jobs.views import signup, verify_email, home, job_list, job_detail, job_create, job_update, job_delete, export_jobs_csv, followup_list, upcoming_followups, stats_view, job_quick_status, job_quick_priority, job_followup_done, job_followup_quick_update
+from jobs.views_admin import admin_dashboard
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("admin-dashboard/", admin_dashboard, name="admin_dashboard"),
+    
     path('accounts/', include('django.contrib.auth.urls')),
+
     path('signup/', signup, name='signup'),
+    path('verify/<int:user_id>/<str:token>/', verify_email, name='verify_email'),
+
+    path('password_reset/',auth_views.PasswordResetView.as_view(template_name='registration/password_reset_form.html'), name='password_reset'),
+    path('password_reset/done/',auth_views.PasswordResetDoneView.as_view(template_name='registration/password_reset_done.html'), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/',auth_views.PasswordResetConfirmView.as_view(template_name='registration/password_reset_confirm.html'), name='password_reset_confirm'),
+    path('reset/done/',auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'), name='password_reset_complete'),
+    
     path('', home, name='home'),
     path('jobs/', job_list, name='job_list'),
     path('jobs/add/', job_create, name='job_create'),

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f7f9fc;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { font-size: 26px; margin-bottom: 20px;}
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .card {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .label { font-size: 13px; color: #555; }
+        .value { font-size: 22px; color: #2563eb; font-weight: 700; }
+        h3 { margin-top: 22px; font-size: 18px; color: #333; }
+        .back-btn {
+            margin-top: 20px;
+            display: inline-block;
+            text-decoration: none;
+            background: #2563eb;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        ul { padding-left: 18px; }
+        li { margin: 3px 0; }
+    </style>
+</head>
+<body>
+
+    <h1>Admin Dashboard</h1>
+
+    <div class="grid">
+        <div class="card"><div class="label">Total Users</div><div class="value">{{ total_users }}</div></div>
+        <div class="card"><div class="label">Total Jobs</div><div class="value">{{ total_jobs }}</div></div>
+        <div class="card"><div class="label">Active Users (30d)</div><div class="value">{{ active_users }}</div></div>
+        <div class="card"><div class="label">Users Without Jobs</div><div class="value">{{ users_with_no_jobs }}</div></div>
+    </div>
+
+    <h3>Status Breakdown</h3>
+    <ul>
+        {% for s in status_stats %}
+            <li>{{ s.status|title }} → {{ s.count }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Top Companies</h3>
+    <ul>
+        {% for c in top_companies %}
+            <li>{{ c.company }} → {{ c.count }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Follow-Up Overview</h3>
+    <ul>
+        <li>Due Today → {{ follow_today }}</li>
+        <li>Overdue → {{ follow_overdue }}</li>
+    </ul>
+
+    <a class="back-btn" href="{% url 'home' %}">← Back</a>
+
+</body>
+</html>

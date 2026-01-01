@@ -14,6 +14,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from .forms import JobForm, CustomUserCreationForm
 from django.contrib.auth import login
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.conf import settings
+from .tokens import email_verification_token
 
 # Create your views here.
 def home(request):
@@ -30,18 +34,34 @@ def home(request):
         total_offered = 0
     return render(request, 'jobs/home.html',{'total_all':total_all,'total_applied':total_applied, 'total_interview':total_interview, 'total_offered':total_offered})
 
+
 def signup(request):
     if request.user.is_authenticated:
         return redirect('job_list')
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save() #saved in DB
-            login(request, user) #auto login after signup
-            return redirect('job_list')
+            user = form.save(commit=False) #don't save yet
+            user.is_active = True  # Set to False if email verification is implemented 
+            user.save()
+
+            token = email_verification_token.make_token(user)
+            link = request.build_absolute_uri(reverse('verify_email', kwargs={'user_id': user.pk, 'token': token}))
+            send_mail("Verify your email",f"Click to verify your account:\n{link}",settings.DEFAULT_FROM_EMAIL,[user.email])
+            return render(request, "registration/verify_sent.html", {"email": user.email})
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
+
+def verify_email(request, user_id, token):
+    user = get_object_or_404(User, pk=user_id)
+    if email_verification_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+        login(request, user)
+        return redirect('job_list')
+    # return render(request, "registration/verify_invalid.html")
+    return HttpResponse("Invalid or expired link", status=400)
 
 @login_required
 def job_list(request):
@@ -313,3 +333,4 @@ def job_followup_quick_update(request, pk):
         job.follow_up_done = False
         job.save()
     return HttpResponse(status=204)
+

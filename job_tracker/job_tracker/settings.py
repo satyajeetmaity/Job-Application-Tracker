@@ -52,6 +52,10 @@ MIDDLEWARE = [
     'jobs.middleware.AdminStaffOnlyMiddleware',
 ]
 
+MIDDLEWARE += [
+    'jobs.middleware.LoginRateLimitMiddleware',
+]
+
 ROOT_URLCONF = 'job_tracker.urls'
 
 TEMPLATES = [
@@ -127,3 +131,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = 'job_list'
 LOGOUT_REDIRECT_URL = 'home'
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@jobtracker.com"
