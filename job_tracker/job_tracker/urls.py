@@ -18,12 +18,13 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from jobs.views import signup, verify_email, home, job_list, job_detail, job_create, job_update, job_delete, export_jobs_csv, followup_list, upcoming_followups, stats_view, job_quick_status, job_quick_priority, job_followup_done, job_followup_quick_update
-from jobs.views_admin import admin_dashboard, admin_job_list
+from jobs.views_admin import admin_dashboard, admin_job_list, admin_activity_timeline
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("admin-dashboard/", admin_dashboard, name="admin_dashboard"),
     path("admin-dashboard/jobs/", admin_job_list, name="admin_job_list"),
+    path("admin-dashboard/activity/", admin_activity_timeline, name="admin_activity_timeline"),
     
     path('accounts/', include('django.contrib.auth.urls')),
 

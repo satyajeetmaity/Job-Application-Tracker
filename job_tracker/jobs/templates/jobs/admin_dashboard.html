@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
@@ -129,89 +130,98 @@
 
 <body>
 
-<h1>Admin Dashboard</h1>
+    <h1>Admin Dashboard</h1>
 
-<!-- ================== TOP METRICS ================== -->
+    <!-- ================== TOP METRICS ================== -->
 
-<div class="grid">
-    <a href="{% url 'admin_job_list' %}" style="text-decoration:none;">
+    <div class="grid">
+        <a href="{% url 'admin_job_list' %}?mode=users" style="text-decoration:none;">
+            <div class="card">
+                <div class="label">Total Users</div>
+                <div class="value">{{ total_users }}</div>
+            </div>
+        </a>
+
+        <a href="{% url 'admin_job_list' %}" style="text-decoration:none;">
+            <div class="card">
+                <div class="label">Total Jobs</div>
+                <div class="value">{{ total_jobs }}</div>
+            </div>
+        </a>
+
         <div class="card">
-            <div class="label">Total Users</div>
-            <div class="value">{{ total_users }}</div>
+            <div class="label">Active Users (30d)</div>
+            <div class="value">{{ active_users }}</div>
         </div>
-    </a>
+        <a href="{% url 'admin_job_list' %}?mode=no_jobs" style="text-decoration:none;">
+            <div class="card">
+                <div class="label">Users Without Jobs</div>
+                <div class="value">{{ users_with_no_jobs }}</div>
+            </div>
+        </a>
+        <a href="{% url 'admin_activity_timeline' %}" style="text-decoration:none;">
+            <div class="card">
+                <div class="label">Admin Activity</div>
+                <div class="value">Timeline</div>
+            </div>
+        </a>
 
-    <a href="{% url 'admin_job_list' %}" style="text-decoration:none;">
-        <div class="card">
-            <div class="label">Total Jobs</div>
-            <div class="value">{{ total_jobs }}</div>
-        </div>
-    </a>
-
-    <div class="card">
-        <div class="label">Active Users (30d)</div>
-        <div class="value">{{ active_users }}</div>
     </div>
 
-    <div class="card">
-        <div class="label">Users Without Jobs</div>
-        <div class="value">{{ users_with_no_jobs }}</div>
+    <!-- ================== STATUS ================== -->
+
+    <div class="section">
+        <h3>Status Breakdown</h3>
+        <ul>
+            {% for s in status_stats %}
+            <li>
+                <a href="{% url 'admin_job_list' %}?status={{ s.status }}">
+                    <span>{{ s.status|title }}</span>
+                    <strong>{{ s.count }}</strong>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
-</div>
 
-<!-- ================== STATUS ================== -->
+    <!-- ================== COMPANIES ================== -->
 
-<div class="section">
-    <h3>Status Breakdown</h3>
-    <ul>
-        {% for s in status_stats %}
-        <li>
-            <a href="{% url 'admin_job_list' %}?status={{ s.status }}">
-                <span>{{ s.status|title }}</span>
-                <strong>{{ s.count }}</strong>
-            </a>
-        </li>
-        {% endfor %}
-    </ul>
-</div>
+    <div class="section">
+        <h3>Top Companies</h3>
+        <ul>
+            {% for c in top_companies %}
+            <li>
+                <a href="{% url 'admin_job_list' %}?q={{ c.company }}">
+                    <span>{{ c.company }}</span>
+                    <strong>{{ c.count }}</strong>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 
-<!-- ================== COMPANIES ================== -->
+    <!-- ================== FOLLOW-UPS ================== -->
 
-<div class="section">
-    <h3>Top Companies</h3>
-    <ul>
-        {% for c in top_companies %}
-        <li>
-            <a href="{% url 'admin_job_list' %}?q={{ c.company }}">
-                <span>{{ c.company }}</span>
-                <strong>{{ c.count }}</strong>
-            </a>
-        </li>
-        {% endfor %}
-    </ul>
-</div>
+    <div class="section">
+        <h3>Follow-Up Overview</h3>
+        <ul>
+            <li>
+                <a href="{% url 'admin_job_list' %}?follow=today">
+                    <span>Due Today</span>
+                    <strong>{{ follow_today }}</strong>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admin_job_list' %}?follow=overdue">
+                    <span>Overdue</span>
+                    <strong>{{ follow_overdue }}</strong>
+                </a>
+            </li>
+        </ul>
+    </div>
 
-<!-- ================== FOLLOW-UPS ================== -->
-
-<div class="section">
-    <h3>Follow-Up Overview</h3>
-    <ul>
-        <li>
-            <a href="{% url 'admin_job_list' %}?follow=today">
-                <span>Due Today</span>
-                <strong>{{ follow_today }}</strong>
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'admin_job_list' %}?follow=overdue">
-                <span>Overdue</span>
-                <strong>{{ follow_overdue }}</strong>
-            </a>
-        </li>
-    </ul>
-</div>
-
-<a class="back-btn" href="{% url 'job_list' %}">← Back</a>
+    <a class="back-btn" href="{% url 'job_list' %}">← Back</a>
 
 </body>
+
 </html>

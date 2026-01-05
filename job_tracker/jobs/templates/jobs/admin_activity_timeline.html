@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Activity Timeline</title>
+    <style>
+        body {
+            font-family: system-ui;
+            background: #f7f9fc;
+            padding: 24px;
+        }
+
+        h2 {
+            margin-bottom: 12px;
+        }
+
+        .filters {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filters select,
+        .filters input {
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+        }
+
+        .filters button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .timeline {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .item {
+            border-left: 3px solid #2563eb;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+
+        .meta {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .action {
+            font-weight: 600;
+            margin: 4px 0;
+        }
+
+        .job {
+            font-size: 14px;
+        }
+
+        .back {
+            margin-top: 16px;
+            display: inline-block;
+            text-decoration: none;
+            background: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 999px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>Admin Activity Timeline</h2>
+
+<!-- ✅ FILTER BAR (HERE) -->
+<form method="get" class="filters">
+    <select name="user">
+        <option value="">All Users</option>
+        {% for u in users %}
+            <option value="{{ u.id }}"
+                {% if current_user == u.id|stringformat:"s" %}selected{% endif %}>
+                {{ u.username }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <select name="action">
+        <option value="">All Actions</option>
+        {% for key,label in actions %}
+            <option value="{{ key }}"
+                {% if current_action == key %}selected{% endif %}>
+                {{ label }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <input type="date" name="from" value="{{ current_from }}">
+    <input type="date" name="to" value="{{ current_to }}">
+
+    <button type="submit">Filter</button>
+</form>
+
+<!-- ✅ TIMELINE -->
+<div class="timeline">
+    {% for a in activities %}
+        <div class="item">
+            <div class="meta">
+                {{ a.created_at|date:"d M Y, H:i" }}
+            </div>
+
+            <div class="action">
+                {{ a.user.username }} → {{ a.get_action_display }}
+            </div>
+
+            {% if a.job %}
+                <div class="job">
+                    {{ a.job.title }} @ {{ a.job.company }}
+                </div>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No activity yet.</p>
+    {% endfor %}
+</div>
+
+<a class="back" href="{% url 'admin_dashboard' %}">← Back to Dashboard</a>
+
+</body>
+</html>

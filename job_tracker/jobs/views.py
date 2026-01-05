@@ -8,7 +8,7 @@ from django.utils import timezone
 import datetime
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Job
+from .models import Job, AdminActivity
 from django.db.models import Q, Case, When, Value, IntegerField, CharField
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -170,6 +170,7 @@ def job_create(request):
             job = form.save(commit=False)
             job.user = request.user
             job.save()
+            AdminActivity.objects.create(user=request.user, action="job_created", job=job)  
             return redirect('job_detail', pk=job.pk)
     else:
         form = JobForm()
@@ -185,6 +186,7 @@ def job_update(request,pk):
             if job.follow_up_date:
               job.follow_up_done = False   # enforce invariant
             job.save()
+            AdminActivity.objects.create(user=request.user, action="job_updated", job=job)
             return redirect('job_detail',pk=job.pk)
     else:
         form = JobForm(instance=job)
@@ -320,6 +322,7 @@ def job_followup_done(request,pk):
     job.follow_up_date = None
     job.follow_up_done = True  #Done ≠ Never set
     job.save()
+    AdminActivity.objects.create(user=request.user, action="followup_done", job=job)
     return HttpResponse(status=204)
 
 @login_required

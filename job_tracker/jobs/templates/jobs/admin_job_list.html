@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Admin – Job Applications</title>
@@ -14,7 +15,9 @@
             --text-muted: #6b7280;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -109,10 +112,25 @@
             text-transform: capitalize;
         }
 
-        .applied { background: #eff6ff; color: #2563eb; }
-        .interview { background: #fef3c7; color: #92400e; }
-        .offered { background: #dcfce7; color: #166534; }
-        .rejected { background: #fee2e2; color: #991b1b; }
+        .applied {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .interview {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .offered {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
 
         /* ================= FOOTER ================= */
 
@@ -138,78 +156,118 @@
 </head>
 
 <body>
+    {% if mode == "jobs" %}
+    <h2>Admin – All Job Applications</h2>
 
-<h2>Admin – All Job Applications</h2>
+    <form method="get" class="filters">
+        <input type="text" name="q" placeholder="Search job / company / user" value="{{ current_q|default:'' }}">
 
-<form method="get" class="filters">
-    <input type="text" name="q" placeholder="Search job / company / user"
-           value="{{ current_q|default:'' }}">
+        <select name="status">
+            <option value="">All Status</option>
+            <option value="applied" {% if current_status == "applied" %}selected{% endif %}>Applied</option>
+            <option value="interview" {% if current_status == "interview" %}selected{% endif %}>Interview</option>
+            <option value="offered" {% if current_status == "offered" %}selected{% endif %}>Offered</option>
+            <option value="rejected" {% if current_status == "rejected" %}selected{% endif %}>Rejected</option>
+        </select>
 
-    <select name="status">
-        <option value="">All Status</option>
-        <option value="applied" {% if current_status == "applied" %}selected{% endif %}>Applied</option>
-        <option value="interview" {% if current_status == "interview" %}selected{% endif %}>Interview</option>
-        <option value="offered" {% if current_status == "offered" %}selected{% endif %}>Offered</option>
-        <option value="rejected" {% if current_status == "rejected" %}selected{% endif %}>Rejected</option>
-    </select>
-
-    <select name="user">
-        <option value="">All Users</option>
-        {% for u in users %}
+        <select name="user">
+            <option value="">All Users</option>
+            {% for u in users %}
             <option value="{{ u.id }}" {% if current_user == u.id|stringformat:"s" %}selected{% endif %}>
                 {{ u.username }}
             </option>
-        {% endfor %}
-    </select>
+            {% endfor %}
+        </select>
 
-    <select name="follow">
-        <option value="">Follow-up</option>
-        <option value="today" {% if current_follow == "today" %}selected{% endif %}>Today</option>
-        <option value="overdue" {% if current_follow == "overdue" %}selected{% endif %}>Overdue</option>
-    </select>
+        <select name="follow">
+            <option value="">Follow-up</option>
+            <option value="today" {% if current_follow == "today" %}selected{% endif %}>Today</option>
+            <option value="overdue" {% if current_follow == "overdue" %}selected{% endif %}>Overdue</option>
+        </select>
 
-    <button type="submit">Apply</button>
-</form>
+        <button type="submit">Apply</button>
+    </form>
 
-<div class="table-wrapper">
-<table>
-    <thead>
-        <tr>
-            <th>User</th>
-            <th>Title</th>
-            <th>Company</th>
-            <th>Status</th>
-            <th>Apply Date</th>
-            <th>Follow-up</th>
-        </tr>
-    </thead>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Apply Date</th>
+                    <th>Follow-up</th>
+                </tr>
+            </thead>
 
-    <tbody>
-    {% for job in jobs %}
-        <tr>
-            <td class="muted">
-                {{ job.user.username|slice:":2" }}*** (ID: {{ job.user.id }})
-            </td>
-            <td>{{ job.title }}</td>
-            <td>{{ job.company }}</td>
-            <td>
-                <span class="status {{ job.status }}">
-                    {{ job.status }}
-                </span>
-            </td>
-            <td>{{ job.apply_date }}</td>
-            <td>{{ job.follow_up_date|default:"-" }}</td>
-        </tr>
-    {% empty %}
-        <tr>
-            <td colspan="6" class="muted">No jobs found</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td class="muted">
+                        <a href="{% url 'admin_job_list' %}?user={{ job.user.id }}" style="text-decoration:none;color:inherit;">
+                           {{ job.user.username|slice:":2" }}***
+                        </a>
+                    </td>
+                    <td>{{ job.title }}</td>
+                    <td>{{ job.company }}</td>
+                    <td>
+                        <span class="status {{ job.status }}">
+                            {{ job.status }}
+                        </span>
+                    </td>
+                    <td>{{ job.apply_date }}</td>
+                    <td>{{ job.follow_up_date|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="muted">No jobs found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Job Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td class="muted">
+                        <a href="{% url 'admin_job_list' %}?user={{ u.id }}" style="text-decoration:none;color:inherit;">
+                            {{ u.username|slice:":2" }}***
+                        </a>
+                    </td>
+                    <td>{{ u.job_count|default:"0" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2">No users</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-<a class="back-btn" href="{% url 'admin_dashboard' %}">← Back to Dashboard</a>
+    {% endif %}
+    <div style="display:flex; gap:10px; margin-top:16px;">
+       {% if mode != "users" %}
+           <a class="back-btn" href="{% url 'admin_job_list' %}?mode=users">
+               ← Back to Users
+           </a>
+       {% endif %}
+   
+       <a class="back-btn" href="{% url 'admin_dashboard' %}">
+          ← Back to Dashboard
+       </a>
+    </div>
 
 </body>
+
 </html>
