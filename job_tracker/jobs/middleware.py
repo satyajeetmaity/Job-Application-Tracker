@@ -3,6 +3,7 @@ from django.urls import reverse
 import time
 from django.http import HttpResponseForbidden
 from django.contrib.auth import authenticate
+from django.contrib.auth import logout
 
 MAX_ATTEMPTS = 5
 BLOCK_WINDOW = 180  # 3 minutes
@@ -54,3 +55,13 @@ class LoginRateLimitMiddleware:
         if xff:
             ip = xff.split(',')[0]
         return request.META.get('REMOTE_ADDR')
+    
+class ActiveUserMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self,request):
+        if request.user.is_authenticated and not request.user.is_active:
+            logout(request)
+            return redirect("login")
+        return self.get_response(request)

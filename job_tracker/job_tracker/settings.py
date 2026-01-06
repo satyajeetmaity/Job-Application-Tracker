@@ -51,11 +51,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'jobs.middleware.AdminStaffOnlyMiddleware',
+    'jobs.middleware.LoginRateLimitMiddleware',
+    'jobs.middleware.ActiveUserMiddleware',
 ]
 
-MIDDLEWARE += [
-    'jobs.middleware.LoginRateLimitMiddleware',
-]
 
 ROOT_URLCONF = 'job_tracker.urls'
 

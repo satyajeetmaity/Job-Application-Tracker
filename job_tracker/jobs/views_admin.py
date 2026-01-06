@@ -2,11 +2,11 @@ import django
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
 from .models import Job, AdminActivity
-
+from django.http import HttpResponseForbidden
 
 @staff_member_required
 def admin_dashboard(request):
@@ -104,3 +104,28 @@ def admin_activity_timeline(request):
         "current_to": date_to,
     }
     return render(request, "jobs/admin_activity_timeline.html", context)
+
+@staff_member_required
+def admin_toggle_user_active(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    #prevent admin locking himself
+    if user == request.user:
+        return HttpResponseForbidden("You cannot lock yourself")
+    
+    #decide action before toggle
+    action = "user_locked" if user.is_active else "user_unlocked"
+    
+    #toggle user
+    user.is_active = not user.is_active
+    user.save()
+
+    # log admin activity
+    AdminActivity.objects.create(
+        user=request.user,        # admin who performed action
+        action=action,
+        job=None                  # no job involved
+    )
+
+
+    return redirect(request.META.get("HTTP_REFERER", "/admin-dashboard/"))

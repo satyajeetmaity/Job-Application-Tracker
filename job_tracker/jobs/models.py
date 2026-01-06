@@ -46,7 +46,9 @@ class AdminActivity(models.Model):
         ("login", "User Logged In"),
         ("job_created", "Job Created"),
         ("job_updated", "Job Updated"),
-        ("followup_done", "Follow-up Done")
+        ("followup_done", "Follow-up Done"),
+        ("user_locked", "User Locked"),
+        ("user_unlocked", "User Unlocked"),
     ]
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

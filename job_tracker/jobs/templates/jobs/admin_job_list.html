@@ -152,6 +152,8 @@
         .muted {
             color: var(--text-muted);
         }
+
+
     </style>
 </head>
 
@@ -205,8 +207,9 @@
                 {% for job in jobs %}
                 <tr>
                     <td class="muted">
-                        <a href="{% url 'admin_job_list' %}?user={{ job.user.id }}" style="text-decoration:none;color:inherit;">
-                           {{ job.user.username|slice:":2" }}***
+                        <a href="{% url 'admin_job_list' %}?user={{ job.user.id }}"
+                            style="text-decoration:none;color:inherit;">
+                            {{ job.user.username|slice:":2" }}***
                         </a>
                     </td>
                     <td>{{ job.title }}</td>
@@ -234,17 +237,42 @@
                 <tr>
                     <th>User</th>
                     <th>Job Count</th>
+                    <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for u in users %}
                 <tr>
                     <td class="muted">
-                        <a href="{% url 'admin_job_list' %}?user={{ u.id }}" style="text-decoration:none;color:inherit;">
+                        <a href="{% url 'admin_job_list' %}?user={{ u.id }}"
+                            style="text-decoration:none;color:inherit;">
                             {{ u.username|slice:":2" }}***
                         </a>
                     </td>
                     <td>{{ u.job_count|default:"0" }}</td>
+                    <td>
+                        {% if u.is_active %}
+                        <span style="color:green;font-weight:600;">Active</span>
+                        {% else %}
+                        <span style="color:red;font-weight:600;">Locked</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u != request.user %}
+                        <form method="post" action="{% url 'admin_toggle_user_active' u.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit"
+                                class="btn {% if u.is_active %}admin-btn-lock{% else %}admin-btn-unlock{% endif %}"
+                                onclick="return confirm('Are you sure?');">
+                                {% if u.is_active %}🔒 Lock{% else %} 🔓 Unlock{% endif %}
+                            </button>
+
+                        </form>
+                        {% else %}
+                        <span class="muted">—</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -257,15 +285,15 @@
 
     {% endif %}
     <div style="display:flex; gap:10px; margin-top:16px;">
-       {% if mode != "users" %}
-           <a class="back-btn" href="{% url 'admin_job_list' %}?mode=users">
-               ← Back to Users
-           </a>
-       {% endif %}
-   
-       <a class="back-btn" href="{% url 'admin_dashboard' %}">
-          ← Back to Dashboard
-       </a>
+        {% if mode != "users" %}
+        <a class="back-btn" href="{% url 'admin_job_list' %}?mode=users">
+            ← Back to Users
+        </a>
+        {% endif %}
+
+        <a class="back-btn" href="{% url 'admin_dashboard' %}">
+            ← Back to Dashboard
+        </a>
     </div>
 
 </body>
