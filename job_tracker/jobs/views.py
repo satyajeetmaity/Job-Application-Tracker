@@ -205,6 +205,7 @@ def export_jobs_csv(request):
     status = request.GET.get('status')
     q = request.GET.get('q')
     date_range = request.GET.get('date') #optional: 'today' or 'week'
+    follow = request.GET.get('follow')
     if request.user.is_staff:
       jobs = Job.objects.all()
     else:

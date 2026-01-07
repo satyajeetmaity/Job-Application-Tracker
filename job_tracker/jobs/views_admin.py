@@ -1,4 +1,5 @@
 import django
+import csv
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
 from django.db.models import Count, Q
@@ -6,7 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
 from .models import Job, AdminActivity
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden
 
 @staff_member_required
 def admin_dashboard(request):
@@ -71,7 +72,7 @@ def admin_job_list(request):
          elif follow == "overdue":
              jobs = jobs.filter(follow_up_date__lt=today, follow_up_done=False)
 
-         context.update({"jobs": jobs.order_by("-id"), "users": User.objects.all().order_by("username"), "current_staus": status, "current_user": user_id, "current_q": q, "current_follow": follow})
+         context.update({"jobs": jobs.order_by("-id"), "users": User.objects.all().order_by("username"), "current_status": status, "current_user": user_id, "current_q": q, "current_follow": follow})
     elif mode == "users":
          context["users"] = (User.objects.annotate(job_count=Count("job")).order_by("username"))
     elif mode == "no_jobs":
@@ -127,5 +128,25 @@ def admin_toggle_user_active(request, user_id):
         job=None                  # no job involved
     )
 
-
     return redirect(request.META.get("HTTP_REFERER", "/admin-dashboard/"))
+
+@staff_member_required
+def admin_export_jobs_csv(request):
+    user_id = request.GET.get("user")
+    jobs = Job.objects.select_related("user")
+
+    if user_id:
+        jobs = jobs.filter(user_id=user_id)
+
+    response = HttpResponse(content_type="text/csv")
+    filename = "jobs_all_users.csv" if not user_id else f"user_{user_id}_jobs.csv"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow(["User","Title","Company","Status","Priority","Apply Date","Follow-up Date",])
+
+    for job in jobs:
+        writer.writerow([
+            job.user.username,job.title,job.company,job.status,job.priority,job.apply_date,job.follow_up_date or "",
+            ])
+    return response
