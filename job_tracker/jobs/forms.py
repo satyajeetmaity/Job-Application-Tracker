@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Job
+from .models import Job, UserProfile
 
 class JobForm(forms.ModelForm):
     apply_date = forms.DateField(widget=forms.DateInput(attrs={'type':'date'}))
@@ -36,3 +36,8 @@ class CustomUserCreationForm(UserCreationForm):
             )
 
         return email
+
+class ResumeUploadForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['resume']

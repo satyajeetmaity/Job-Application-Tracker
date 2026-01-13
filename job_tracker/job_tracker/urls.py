@@ -17,8 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
-from jobs.views import signup, verify_email, home, job_list, job_detail, job_create, job_update, job_delete, export_jobs_csv, followup_list, upcoming_followups, stats_view, job_quick_status, job_quick_priority, job_followup_done, job_followup_quick_update
+from jobs.views import signup, verify_email, home, job_list, job_detail, job_create, job_update, job_delete, export_jobs_csv, followup_list, upcoming_followups, stats_view, job_quick_status, job_quick_priority, job_followup_done, job_followup_quick_update, resume_upload
 from jobs.views_admin import admin_dashboard, admin_job_list, admin_activity_timeline, admin_toggle_user_active, admin_export_jobs_csv
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -52,4 +54,9 @@ urlpatterns = [
     path('jobs/<int:pk>/priority/', job_quick_priority, name='job_quick_priority'),
     path('jobs/<int:pk>/followup/done/', job_followup_done, name='job_followup_done'),
     path('jobs/<int:pk>/followup/quick/', job_followup_quick_update, name='job_followup_quick_update'),
+
+    path('resume/upload/', resume_upload, name='resume_upload'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

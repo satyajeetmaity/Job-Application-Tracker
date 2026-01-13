@@ -8,11 +8,11 @@ from django.utils import timezone
 import datetime
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Job, AdminActivity
+from .models import Job, AdminActivity, UserProfile
 from django.db.models import Q, Case, When, Value, IntegerField, CharField
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from .forms import JobForm, CustomUserCreationForm
+from .forms import JobForm, CustomUserCreationForm, ResumeUploadForm
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -139,9 +139,11 @@ def job_list(request):
         else:
             job.followup_state = "none"
 
+    profile = UserProfile.objects.filter(user=request.user).first()
+
 
     return render(request, 'jobs/job_list.html', {'jobs': page_obj.object_list,'page_obj': page_obj, 'current_status':status, 'current_q':q, 'current_date_range':date_range,'current_sort':sort,'current_follow': follow, 'total_all':total_all,
-     'total_applied':total_applied, 'total_interview':total_interview, 'total_rejected':total_rejected, 'total_offered':total_offered, 'today': today,})
+     'total_applied':total_applied, 'total_interview':total_interview, 'total_rejected':total_rejected, 'total_offered':total_offered, 'today': today,  'profile': profile,})
 
 @login_required
 def followup_list(request):
@@ -338,3 +340,14 @@ def job_followup_quick_update(request, pk):
         job.save()
     return HttpResponse(status=204)
 
+@login_required
+def resume_upload(request):
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        form = ResumeUploadForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('job_list')
+    else:
+        form = ResumeUploadForm(instance=profile)
+    return render(request, 'jobs/resume_upload.html', {'form': form, 'profile': profile})  

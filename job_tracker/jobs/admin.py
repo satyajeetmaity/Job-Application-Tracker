@@ -1,6 +1,6 @@
 # jobs/admin.py
 from django.contrib import admin
-from .models import Job
+from .models import Job, UserProfile
 
 @admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
@@ -16,3 +16,9 @@ class JobAdmin(admin.ModelAdmin):
         return obj.id   # or custom serial logic
     
     sr_no.short_description = "No."
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'resume')
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('resume',)

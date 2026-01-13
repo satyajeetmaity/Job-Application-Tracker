@@ -58,3 +58,11 @@ class AdminActivity(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.action} - {self.created_at}"
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    resume = models.FileField(upload_to='resumes/', blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.user.username
