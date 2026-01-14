@@ -343,10 +343,16 @@ def job_followup_quick_update(request, pk):
 @login_required
 def resume_upload(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
+    old_resume = profile.resume
     if request.method == 'POST':
         form = ResumeUploadForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
+
+            action = "resume_uploaded" if not old_resume else "resume_updated"
+
+            AdminActivity.objects.create(user=request.user, action=action, job=None)
+            
             return redirect('job_list')
     else:
         form = ResumeUploadForm(instance=profile)

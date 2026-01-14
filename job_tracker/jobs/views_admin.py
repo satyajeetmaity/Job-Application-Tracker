@@ -6,7 +6,7 @@ from django.db.models import Count, Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
-from .models import Job, AdminActivity
+from .models import Job, AdminActivity, UserProfile
 from django.http import HttpResponse, HttpResponseForbidden
 
 @staff_member_required
@@ -74,7 +74,7 @@ def admin_job_list(request):
 
          context.update({"jobs": jobs.order_by("-id"), "users": User.objects.all().order_by("username"), "current_status": status, "current_user": user_id, "current_q": q, "current_follow": follow})
     elif mode == "users":
-         context["users"] = (User.objects.annotate(job_count=Count("job")).order_by("username"))
+         context["users"] = (User.objects.annotate(job_count=Count("job")).select_related("profile").order_by("username"))
     elif mode == "no_jobs":
          context["users"] = (User.objects.annotate(job_count=Count("job")).filter(job_count=0).order_by("username"))
     return render(request, "jobs/admin_job_list.html", context)

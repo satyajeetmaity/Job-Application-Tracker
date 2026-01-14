@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
+import os
 # Create your models here.
 class Job(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -49,6 +50,8 @@ class AdminActivity(models.Model):
         ("followup_done", "Follow-up Done"),
         ("user_locked", "User Locked"),
         ("user_unlocked", "User Unlocked"),
+        ("resume_uploaded", "Resume Uploaded"),
+        ("resume_updated", "Resume Updated"),
     ]
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -59,10 +62,25 @@ class AdminActivity(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.action} - {self.created_at}"
 
+def resume_upload_path(instance, filename):
+    #media/resumes/user_<id>/<filename>
+    return f"resumes/user_{instance.user.id}/{filename}"
+
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    resume = models.FileField(upload_to='resumes/', blank=True, null=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+    resume = models.FileField(upload_to=resume_upload_path, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            try:
+                old = UserProfile.objects.get(pk=self.pk)
+                if old.resume and old.resume != self.resume:
+                    if old.resume and old.resume.path and os.path.isfile(old.resume.path):
+                        os.remove(old.resume.path)
+            except UserProfile.DoesNotExist:
+                pass
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.user.username
