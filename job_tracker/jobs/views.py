@@ -1,8 +1,8 @@
 from urllib import request
 from django.core.paginator import Paginator
 import csv
-from django.http import HttpResponse
-from django.views.decorators.http import require_POST
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST, require_GET
 from django.urls import reverse
 from django.utils import timezone
 import datetime
@@ -352,8 +352,34 @@ def resume_upload(request):
             action = "resume_uploaded" if not old_resume else "resume_updated"
 
             AdminActivity.objects.create(user=request.user, action=action, job=None)
-            
             return redirect('job_list')
     else:
         form = ResumeUploadForm(instance=profile)
     return render(request, 'jobs/resume_upload.html', {'form': form, 'profile': profile})  
+
+@login_required
+@require_GET
+def resume_checker_api(request):
+    profile = UserProfile.objects.filter(user=request.user).first()
+
+    if not profile or not profile.resume:
+        return JsonResponse({"has_resume": False, "message": "No resume uploaded."}, status=404)
+    
+    #Fake Analysis(BASE Logic)
+    score = 68
+    sections_found = ["Education", "Skills"]
+    missing_sections = ["Projects", "Experience"]
+
+    suggestions = [
+        "Add a Projects section",
+        "Add measurable achievements",
+        "Add a short professional summary"
+    ]
+    return JsonResponse({
+        "has_resume": True,
+        "resume_name": profile.resume.name,
+        "score": score,
+        "sections_found": sections_found,
+        "missing_sections": missing_sections,
+        "suggestions": suggestions
+    })

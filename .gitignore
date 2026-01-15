@@ -7,3 +7,6 @@ media/
 *.pdf
 *.doc
 *.docx
+
+# OS
+.DS_Store
