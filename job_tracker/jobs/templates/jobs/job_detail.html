@@ -543,6 +543,9 @@
                     <a href="{% url 'job_delete' job.pk %}" class="btn-danger">
                         <span class="btn-icon">🗑️</span> Delete
                     </a>
+                    <button type="button" class="btn-secondary" onclick="matchResume('{{ job.id }}')">
+                        🔍 Match Resume
+                    </button>
                     <a href="{% url 'job_list' %}" class="btn-secondary">
                         <span class="btn-icon">←</span> Back to all jobs
                     </a>
@@ -550,6 +553,22 @@
             </div>
         </div>
     </div>
+    <script>
+        function matchResume(jobId) {
+            fetch(`/api/resume/match/${jobId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    let msg =
+                        "Job: " + data.job + "\n\n" +
+                        "Match: " + data.match_percent + "%\n\n" +
+                        "Missing Keywords:\n- " +
+                        data.missing_keywords.join("\n- ");
+
+                    alert(msg);
+                })
+                .catch(() => alert("Resume match failed"));
+        }
+    </script>
 </body>
 
 </html>

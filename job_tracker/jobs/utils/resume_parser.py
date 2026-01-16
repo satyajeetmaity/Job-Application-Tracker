@@ -5,6 +5,8 @@ def extract_text_from_pdf(file_path: str) -> str:
        Returns plain text string."""
     try:
         text = extract_text(file_path)
+        if not text:
+            return ""
         return text.strip()
     except Exception as e:
         return ""

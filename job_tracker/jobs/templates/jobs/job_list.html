@@ -651,10 +651,78 @@
             justify-content: center;
         }
 
-
-
         @media (max-width: 420px) {
             .status-select-overlay {
+                opacity: 1;
+            }
+        }
+
+        /* Resume Modal */
+        .resume-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resume-modal-content {
+            background: #ffffff;
+            border-radius: 14px;
+            width: 90%;
+            max-width: 420px;
+            padding: 20px 22px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .resume-modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+
+        .resume-score {
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .resume-section {
+            margin-bottom: 10px;
+        }
+
+        .resume-section h4 {
+            margin: 6px 0;
+            font-size: 14px;
+        }
+
+        .resume-section ul {
+            padding-left: 18px;
+            margin: 4px 0;
+            font-size: 13px;
+        }
+
+        .resume-close {
+            float: right;
+            font-size: 22px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .resume-close:hover {
+            color: #111827;
+        }
+
+        @keyframes fadeIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
                 opacity: 1;
             }
         }
@@ -931,86 +999,139 @@
             No jobs found for this filter. Try changing the status, date or search term.
         </div>
         {% endif %}
-    </div>
-    <script>
-        function toggleActions(el) {
-            const w = el.closest('.followup-inline');
-            const actions = w.querySelector('.followup-actions');
+        <!-- Resume Check Modal -->
+        <div id="resumeModal" class="resume-modal">
+            <div class="resume-modal-content">
+                <span class="resume-close" onclick="closeResumeModal()">×</span>
 
-            if (actions.style.display === 'flex') {
-                actions.style.display = 'none';
-            } else {
-                actions.style.display = 'flex';
-            }
-        }
-        function openFollowup(btn) {
-            const w = btn.closest('.followup-inline');
-            w.querySelector('.followup-actions').style.display = 'none';
-            w.querySelector('.followup-editor').style.display = 'flex';
-        }
+                <h2>Resume Check Result</h2>
 
-        function cancelFollowup(btn) {
-            const w = btn.closest('.followup-inline');
-            w.querySelector('.followup-editor').style.display = 'none';
-            w.querySelector('.followup-actions').style.display = 'flex';
-        }
+                <div class="resume-score">
+                    Score: <strong><span id="resumeScore">0</span>%</strong>
+                </div>
 
-        function saveFollowup(btn) {
-            const w = btn.closest('.followup-inline');
-            const jobId = w.dataset.id;
-            const date = w.querySelector('input[type="date"]').value;
+                <div class="resume-section">
+                    <h4>Sections Found</h4>
+                    <ul id="sectionsFound"></ul>
+                </div>
 
-            fetch(`/jobs/${jobId}/followup/quick/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `follow_up_date=${date}`
-            }).then(() => location.reload());
-        }
+                <div class="resume-section">
+                    <h4>Missing Sections</h4>
+                    <ul id="missingSections"></ul>
+                </div>
 
-        function markDone(btn) {
-            const w = btn.closest('.followup-inline');
-            const jobId = w.dataset.id;
+                <div class="resume-section">
+                    <h4>Suggestions</h4>
+                    <ul id="resumeSuggestions"></ul>
+                </div>
+            </div>
+        </div>
 
-            fetch(`/jobs/${jobId}/followup/done/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
-            }).then(() => location.reload());
-        }
+        <script>
+            function toggleActions(el) {
+                const w = el.closest('.followup-inline');
+                const actions = w.querySelector('.followup-actions');
 
-        function getCookie(name) {
-            let v = null;
-            document.cookie.split(';').forEach(c => {
-                c = c.trim();
-                if (c.startsWith(name + '=')) {
-                    v = decodeURIComponent(c.slice(name.length + 1));
+                if (actions.style.display === 'flex') {
+                    actions.style.display = 'none';
+                } else {
+                    actions.style.display = 'flex';
                 }
-            });
-            return v;
-        }
-        function checkResume() {
-            fetch("/api/resume/check/")
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.has_resume) {
-                        alert("No resume uploaded");
-                        return;
-                    }
+            }
+            function openFollowup(btn) {
+                const w = btn.closest('.followup-inline');
+                w.querySelector('.followup-actions').style.display = 'none';
+                w.querySelector('.followup-editor').style.display = 'flex';
+            }
 
-                    let msg =
-                        "Resume Score: " + data.score + "%\n\n" +
-                        "Sections Found:\n- " + data.sections_found.join("\n- ") + "\n\n" +
-                        "Missing Sections:\n- " + data.missing_sections.join("\n- ") + "\n\n" +
-                        "Suggestions:\n- " + data.suggestions.join("\n- ");
-                    alert(msg);
-                })
-                .catch(() => {
-                    alert("Resume check failed");
+            function cancelFollowup(btn) {
+                const w = btn.closest('.followup-inline');
+                w.querySelector('.followup-editor').style.display = 'none';
+                w.querySelector('.followup-actions').style.display = 'flex';
+            }
+
+            function saveFollowup(btn) {
+                const w = btn.closest('.followup-inline');
+                const jobId = w.dataset.id;
+                const date = w.querySelector('input[type="date"]').value;
+
+                fetch(`/jobs/${jobId}/followup/quick/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `follow_up_date=${date}`
+                }).then(() => location.reload());
+            }
+
+            function markDone(btn) {
+                const w = btn.closest('.followup-inline');
+                const jobId = w.dataset.id;
+
+                fetch(`/jobs/${jobId}/followup/done/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                }).then(() => location.reload());
+            }
+
+            function getCookie(name) {
+                let v = null;
+                document.cookie.split(';').forEach(c => {
+                    c = c.trim();
+                    if (c.startsWith(name + '=')) {
+                        v = decodeURIComponent(c.slice(name.length + 1));
+                    }
                 });
-        }
-    </script>
+                return v;
+            }
+            function checkResume() {
+                fetch("/api/resume/check/")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.has_resume) {
+                            alert("No resume uploaded");
+                            return;
+                        }
+
+                        document.getElementById("resumeScore").innerText = data.score;
+
+                        fillList("sectionsFound", data.sections_found);
+                        fillList("missingSections", data.missing_sections);
+                        fillList("resumeSuggestions", data.suggestions);
+
+                        openResumeModal();
+                    })
+                    .catch(() => {
+                        alert("Resume check failed");
+                    });
+            }
+            function fillList(id, items) {
+                const ul = document.getElementById(id);
+                ul.innerHTML = "";
+
+                if (!items || items.length === 0) {
+                    const li = document.createElement("li");
+                    li.innerText = "None";
+                    ul.appendChild(li);
+                    return;
+                }
+
+                items.forEach(item => {
+                    const li = document.createElement("li");
+                    li.innerText = item;
+                    ul.appendChild(li);
+                });
+            }
+
+            function openResumeModal() {
+                document.getElementById("resumeModal").style.display = "flex";
+            }
+
+            function closeResumeModal() {
+                document.getElementById("resumeModal").style.display = "none";
+            }
+        </script>
 
 
 </body>

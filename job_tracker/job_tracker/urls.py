@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
-from jobs.views import signup, verify_email, home, job_list, job_detail, job_create, job_update, job_delete, export_jobs_csv, followup_list, upcoming_followups, stats_view, job_quick_status, job_quick_priority, job_followup_done, job_followup_quick_update, resume_upload, resume_checker_api
+from jobs.views import signup, verify_email, home, job_list, job_detail, job_create, job_update, job_delete, export_jobs_csv, followup_list, upcoming_followups, stats_view, job_quick_status, job_quick_priority, job_followup_done, job_followup_quick_update, resume_upload, resume_checker_api, resume_job_match_api
 from jobs.views_admin import admin_dashboard, admin_job_list, admin_activity_timeline, admin_toggle_user_active, admin_export_jobs_csv
 from django.conf import settings
 from django.conf.urls.static import static
@@ -57,6 +57,7 @@ urlpatterns = [
 
     path('resume/upload/', resume_upload, name='resume_upload'),
     path('api/resume/check/', resume_checker_api, name='resume_checker_api'),
+    path("api/resume/match/<int:job_id>/", resume_job_match_api, name="resume_job_match_api"),
 ]
 
 if settings.DEBUG:

@@ -8,6 +8,8 @@ from django.utils import timezone
 import datetime
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
+
+from jobs.utils.resume_parser import extract_text_from_pdf
 from .models import Job, AdminActivity, UserProfile
 from django.db.models import Q, Case, When, Value, IntegerField, CharField
 from django.contrib.auth.decorators import login_required
@@ -365,21 +367,81 @@ def resume_checker_api(request):
     if not profile or not profile.resume:
         return JsonResponse({"has_resume": False, "message": "No resume uploaded."}, status=404)
     
-    #Fake Analysis(BASE Logic)
-    score = 68
-    sections_found = ["Education", "Skills"]
-    missing_sections = ["Projects", "Experience"]
+    # Read + extract resume text
+    text = extract_text_from_pdf(profile.resume.path)
+    if not text:
+        return JsonResponse({"has_resume": True, "error": "Could not extract resume text"}, status=400)
+    
+    # Sections to Check
+    sections = {
+        "Education" : ["education"],
+        "Experience": ["experience", "work experience"],
+        "Projects": ["projects", "project"],
+        "Skills": ["skills", "technical skills"],
+        "Summary": ["summary", "profile"],
+    }
 
+    sections_found = []
+    missing_sections = []
+
+    for section, keywords in sections.items():
+        if any(k in text.lower() for k in keywords):
+            sections_found.append(section)
+        else:
+            missing_sections.append(section)
+    # 3️⃣ REAL SCORE (NO HARDCODE)
+    # 5 sections → each = 20 points
+    score = len(sections_found) * 20
+    if score > 100:
+        score = 100
+
+    # 4️⃣ Suggestions (based on missing sections)
     suggestions = [
-        "Add a Projects section",
-        "Add measurable achievements",
-        "Add a short professional summary"
+        f"Add or improve {section} section"
+        for section in missing_sections
     ]
+
+    # 5️⃣ Return JSON
     return JsonResponse({
         "has_resume": True,
         "resume_name": profile.resume.name,
         "score": score,
         "sections_found": sections_found,
         "missing_sections": missing_sections,
-        "suggestions": suggestions
+        "suggestions": suggestions,
+    })
+
+@login_required
+@require_GET
+def resume_job_match_api(request, job_id):
+    profile = UserProfile.objects.filter(user=request.user).first()
+    job = get_object_or_404(Job, id=job_id, user=request.user)
+
+    if not profile or not profile.resume:
+        return JsonResponse({"error": "No resume uploaded"}, status=400)
+
+    resume_text = extract_text_from_pdf(profile.resume.path).lower()
+    job_text = (
+        f"{job.title} {job.company} {job.notes or ''} "
+        f"{job.next_step or ''}"
+    ).lower()
+
+    if not resume_text:
+        return JsonResponse({"error": "Resume text not readable"}, status=400)
+
+    # simple keyword extraction
+    resume_words = set(resume_text.split())
+    job_words = set(job_text.split())
+
+    common = resume_words.intersection(job_words)
+    missing = job_words - resume_words
+
+    match_percent = int((len(common) / max(len(job_words), 1)) * 100)
+
+    return JsonResponse({
+        "job": job.title,
+        "match_percent": match_percent,
+        "matched_keywords": list(common)[:20],
+        "missing_keywords": list(missing)[:20],
+        "suggestion": "Add missing keywords to resume for better ATS match"
     })
