@@ -746,6 +746,7 @@
                 <a class="btn-secondary" href="{% url 'resume_upload' %}"
                     title="{% if profile and profile.resume %}Resume uploaded{% else %}Upload your resume{% endif %}">
                     {% if profile and profile.resume %}📄 {% else %}📄 Upload Resume {% endif %}</a>
+                <a class="btn-secondary" href="{% url 'resume_builder' %}" title="Build Resume">🛠️</a>
                 <a class="btn-secondary" href="#" title="Check Resume" onclick="checkResume()">🧠</a>
                 <a class="btn-primary" href="{% url 'job_create' %}" title="Add Job">➕</a>
                 <a class="btn-secondary" href="{% url 'stats' %}" title="Stats">📈</a>

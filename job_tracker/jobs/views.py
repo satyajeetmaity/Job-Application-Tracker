@@ -10,11 +10,11 @@ from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 
 from jobs.utils.resume_parser import extract_text_from_pdf
-from .models import Job, AdminActivity, UserProfile
+from .models import Job, AdminActivity, UserProfile, ResumeBuilder
 from django.db.models import Q, Case, When, Value, IntegerField, CharField
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from .forms import JobForm, CustomUserCreationForm, ResumeUploadForm
+from .forms import JobForm, CustomUserCreationForm, ResumeUploadForm, ResumeBuilderForm
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -445,3 +445,21 @@ def resume_job_match_api(request, job_id):
         "missing_keywords": list(missing)[:20],
         "suggestion": "Add missing keywords to resume for better ATS match"
     })
+
+@login_required
+def resume_builder(request):
+    resume, _ = ResumeBuilder.objects.get_or_create(user=request.user, defaults={"full_name": request.user.get_full_name(), "email": request.user.email,})
+
+    if request.method == 'POST':
+        form = ResumeBuilderForm(request.POST, instance=resume)
+        if form.is_valid():
+            form.save()
+            return redirect('resume_builder')
+    else:
+        form = ResumeBuilderForm(instance=resume)
+
+    skills_list = []
+    if resume.skills:
+        skills_list = [s.strip() for s in resume.skills.split(",") if s.strip()]
+
+    return render(request, 'jobs/resume_builder.html', {'form': form, 'resume': resume, 'skills_list': skills_list})
